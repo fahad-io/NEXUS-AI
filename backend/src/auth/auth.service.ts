@@ -6,7 +6,8 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
-import { UsersService, User } from '../users/users.service';
+import { UsersService } from '../users/users.service';
+import { UserDocument } from '../schemas/user.schema';
 import { SignupDto } from './dto/signup.dto';
 
 @Injectable()
@@ -33,12 +34,12 @@ export class AuthService {
     return { access_token: token, user: this.usersService.sanitize(user) };
   }
 
-  async login(user: User) {
+  async login(user: UserDocument) {
     const token = this.generateToken(user);
     return { access_token: token, user: this.usersService.sanitize(user) };
   }
 
-  async validateUser(email: string, password: string): Promise<User | null> {
+  async validateUser(email: string, password: string): Promise<UserDocument | null> {
     const user = await this.usersService.findByEmail(email);
     if (!user) return null;
     const valid = await bcrypt.compare(password, user.password);
@@ -53,8 +54,8 @@ export class AuthService {
     return { access_token: token, user: this.usersService.sanitize(fresh) };
   }
 
-  private generateToken(user: User): string {
-    const payload = { sub: user.id, email: user.email, role: user.role };
+  private generateToken(user: UserDocument): string {
+    const payload = { sub: (user._id as any).toString(), email: user.email, role: user.role };
     return this.jwtService.sign(payload, {
       secret: this.configService.get<string>(
         'JWT_SECRET',

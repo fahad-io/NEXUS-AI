@@ -41,30 +41,24 @@ export class ChatController {
   }
 
   /** Create a new session (authenticated users) */
-  @Post('session')
   @ApiBearerAuth('bearer')
-  createSession(@Body() dto: CreateSessionDto, @Request() req: any) {
-    const session = this.chatService.createSession(
-      req.user.id,
-      dto.modelId,
-      dto.title,
-    );
-    return { sessionId: session.id, session };
+  @Post('session')
+  async createSession(@Body() dto: CreateSessionDto, @Request() req: any) {
+    const session = await this.chatService.createSession(req.user.id, dto.modelId, dto.title);
+    return { sessionId: (session._id as any).toString(), session };
   }
 
-  /** Delete a session (authenticated users) */
-  @Delete('session/:id')
   @ApiBearerAuth('bearer')
-  deleteSession(@Param('id') id: string, @Request() req: any) {
-    const deleted = this.chatService.deleteSession(id, req.user.id);
-    if (!deleted)
-      throw new NotFoundException('Session not found or access denied');
+  @Delete('session/:id')
+  async deleteSession(@Param('id') id: string, @Request() req: any) {
+    const deleted = await this.chatService.deleteSession(id, req.user.id);
+    if (!deleted) throw new NotFoundException('Session not found or access denied');
     return { success: true };
   }
 
   /** Return paginated chat history for the authenticated user */
-  @Get('history')
   @ApiBearerAuth('bearer')
+  @Get('history')
   getHistory(
     @Request() req: any,
     @Query('page') page = '1',

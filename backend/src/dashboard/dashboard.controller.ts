@@ -14,16 +14,8 @@ export class DashboardController {
   }
 
   @Get('history')
-  getHistory(
-    @Request() req: any,
-    @Query('page') page = '1',
-    @Query('limit') limit = '20',
-  ) {
-    return this.dashboardService.getHistory(
-      req.user.id,
-      Number(page),
-      Number(limit),
-    );
+  getHistory(@Request() req: any, @Query('page') page = '1', @Query('limit') limit = '20') {
+    return this.dashboardService.getHistory(req.user.id, Number(page), Number(limit));
   }
 
   @Get('billing')

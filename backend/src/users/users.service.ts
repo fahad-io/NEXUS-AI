@@ -1,28 +1,20 @@
 import { Injectable } from '@nestjs/common';
-import { v4 as uuidv4 } from 'uuid';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { User, UserDocument } from '../schemas/user.schema';
 
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  password: string;
-  createdAt: Date;
-  role: 'user' | 'guest';
-}
+export type { User };
 
 @Injectable()
 export class UsersService {
-  private readonly users = new Map<string, User>();
+  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
 
-  async findByEmail(email: string): Promise<User | undefined> {
-    for (const user of this.users.values()) {
-      if (user.email === email) return user;
-    }
-    return undefined;
+  async findByEmail(email: string): Promise<UserDocument | null> {
+    return this.userModel.findOne({ email: email.toLowerCase() }).exec();
   }
 
-  async findById(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+  async findById(id: string): Promise<UserDocument | null> {
+    return this.userModel.findById(id).exec();
   }
 
   async create(data: {
@@ -30,32 +22,26 @@ export class UsersService {
     name: string;
     password: string;
     role?: 'user' | 'guest';
-  }): Promise<User> {
-    const user: User = {
-      id: uuidv4(),
-      email: data.email,
+  }): Promise<UserDocument> {
+    const user = new this.userModel({
+      email: data.email.toLowerCase(),
       name: data.name,
       password: data.password,
-      createdAt: new Date(),
       role: data.role ?? 'user',
+    });
+    return user.save();
+  }
+
+  async update(id: string, data: Partial<User>): Promise<UserDocument | null> {
+    return this.userModel.findByIdAndUpdate(id, data, { new: true }).exec();
+  }
+
+  sanitize(user: UserDocument): { id: string; email: string; name: string; role: string } {
+    return {
+      id: (user._id as any).toString(),
+      email: user.email,
+      name: user.name,
+      role: user.role,
     };
-    this.users.set(user.id, user);
-    return user;
-  }
-
-  async update(
-    id: string,
-    data: Partial<Omit<User, 'id'>>,
-  ): Promise<User | undefined> {
-    const user = this.users.get(id);
-    if (!user) return undefined;
-    const updated = { ...user, ...data };
-    this.users.set(id, updated);
-    return updated;
-  }
-
-  sanitize(user: User): Omit<User, 'password'> {
-    const { password, ...rest } = user;
-    return rest;
   }
 }

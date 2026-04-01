@@ -1,17 +1,15 @@
-import { Controller, Get, Param } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ModelsService } from './models.service';
 import { Public } from '../auth/public.decorator';
 
-@ApiTags('Models')
 @Public()
 @Controller('models')
 export class ModelsController {
   constructor(private readonly modelsService: ModelsService) {}
 
   @Get()
-  findAll() {
-    return this.modelsService.findAll();
+  findAll(@Query('type') type?: string, @Query('lab') lab?: string, @Query('search') search?: string) {
+    return this.modelsService.findAll({ type, lab, search });
   }
 
   @Get(':id')

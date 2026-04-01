@@ -1,241 +1,132 @@
 import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, Types } from 'mongoose';
 import { ConfigService } from '@nestjs/config';
-import { v4 as uuidv4 } from 'uuid';
+import { ChatSession, ChatSessionDocument } from '../schemas/chat-session.schema';
 import { SendMessageDto } from './dto/send-message.dto';
 
 const MOCK_RESPONSES = [
-  "That's a great question! Based on your requirements, I'd recommend exploring the latest models available in the marketplace. Each model has unique strengths — GPT-5 excels at reasoning, Claude Opus at analysis, and Gemini at multimodal tasks.",
-  "I can help you with that! Here's a structured approach:\n\n1. **Define your requirements** clearly\n2. **Select the right model** based on your use case\n3. **Optimize your prompts** for best results\n4. **Monitor and iterate** based on outputs",
-  'Excellent choice! This model is well-suited for your task. Would you like me to walk you through the best prompting strategies for optimal results?',
-  "Here's what I found: The AI landscape is evolving rapidly. The key models to watch are GPT-5, Claude Opus 4.5, and Gemini 2.0 Ultra — each offering unique capabilities for different use cases.",
+  "That's a great question! Based on your requirements, I'd recommend exploring the latest models. GPT-5 excels at reasoning, Claude Opus at analysis, and Gemini at multimodal tasks.",
+  "I can help with that! Here's a structured approach:\n\n1. **Define your requirements** clearly\n2. **Select the right model** based on your use case\n3. **Optimize your prompts** for best results\n4. **Monitor and iterate** based on outputs",
+  'Excellent choice! This model is well-suited for your task. Would you like me to walk you through the best prompting strategies?',
+  "Here's what I found: The AI landscape is evolving rapidly. The top models to watch are GPT-5, Claude Opus 4.5, and Gemini 2.0 Ultra — each offering unique capabilities.",
 ];
-
-export interface ChatMessage {
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-}
-
-export interface ChatSession {
-  id: string;
-  userId?: string;
-  modelId: string;
-  title: string;
-  messages: ChatMessage[];
-  createdAt: Date;
-  updatedAt: Date;
-  expiresAt?: Date;
-  isGuest: boolean;
-}
 
 @Injectable()
 export class ChatService {
-  private readonly sessions = new Map<string, ChatSession>();
+  constructor(
+    @InjectModel(ChatSession.name) private sessionModel: Model<ChatSessionDocument>,
+    private configService: ConfigService,
+  ) {}
 
-  constructor(private configService: ConfigService) {
-    // Periodically clean expired guest sessions every 15 minutes
-    setInterval(() => this.cleanExpiredSessions(), 15 * 60 * 1000);
-  }
-
-  // ─── Session Management ───────────────────────────────────────────────────
-
-  createSession(
-    userId?: string,
-    modelId = 'gpt-5',
-    title = 'New Chat',
-  ): ChatSession {
+  async createSession(userId?: string, modelId = 'gpt-5', title = 'New Chat'): Promise<ChatSessionDocument> {
     const isGuest = !userId;
-    const session: ChatSession = {
-      id: uuidv4(),
-      userId,
+    const session = new this.sessionModel({
+      userId: userId ? new Types.ObjectId(userId) : undefined,
       modelId,
       title,
       messages: [],
-      createdAt: new Date(),
-      updatedAt: new Date(),
       isGuest,
-      expiresAt: isGuest
-        ? new Date(Date.now() + 3 * 60 * 60 * 1000)
-        : undefined,
-    };
-    this.sessions.set(session.id, session);
-    return session;
+      expiresAt: isGuest ? new Date(Date.now() + 3 * 60 * 60 * 1000) : undefined,
+    });
+    return session.save();
   }
 
-  getSession(sessionId: string): ChatSession | undefined {
-    const session = this.sessions.get(sessionId);
-    if (!session) return undefined;
-
-    // Check expiry for guest sessions
-    if (
-      session.isGuest &&
-      session.expiresAt &&
-      session.expiresAt < new Date()
-    ) {
-      this.sessions.delete(sessionId);
-      return undefined;
-    }
-    return session;
+  async getSession(sessionId: string): Promise<ChatSessionDocument | null> {
+    return this.sessionModel.findById(sessionId).exec();
   }
 
-  getUserSessions(userId: string): ChatSession[] {
-    const results: ChatSession[] = [];
-    for (const session of this.sessions.values()) {
-      if (session.userId === userId) results.push(session);
-    }
-    return results.sort(
-      (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime(),
-    );
+  async getUserSessions(userId: string): Promise<ChatSessionDocument[]> {
+    return this.sessionModel
+      .find({ userId: new Types.ObjectId(userId), isGuest: false })
+      .sort({ updatedAt: -1 })
+      .exec();
   }
 
-  deleteSession(sessionId: string, userId?: string): boolean {
-    const session = this.sessions.get(sessionId);
-    if (!session) return false;
-    if (userId && session.userId !== userId) return false;
-    this.sessions.delete(sessionId);
-    return true;
+  async deleteSession(sessionId: string, userId?: string): Promise<boolean> {
+    const query: any = { _id: sessionId };
+    if (userId) query.userId = new Types.ObjectId(userId);
+    const result = await this.sessionModel.deleteOne(query).exec();
+    return result.deletedCount > 0;
   }
 
-  // ─── Send Message ─────────────────────────────────────────────────────────
-
-  async sendMessage(
-    dto: SendMessageDto,
-    userId?: string,
-    guestSessionId?: string,
-  ) {
+  async sendMessage(dto: SendMessageDto, userId?: string, guestSessionId?: string) {
     const isMock = this.configService.get<string>('MOCK_AI', 'true') === 'true';
-
-    // Resolve or create session
-    let session: ChatSession | undefined;
     const incomingSessionId = dto.sessionId || guestSessionId;
 
+    let session: ChatSessionDocument | null = null;
     if (incomingSessionId) {
-      session = this.getSession(incomingSessionId);
+      try { session = await this.getSession(incomingSessionId); } catch { /* invalid id */ }
     }
-
     if (!session) {
-      session = this.createSession(userId, dto.modelId);
+      session = await this.createSession(userId, dto.modelId);
     }
 
-    // Add user message to session
-    const userMsg: ChatMessage = {
-      role: 'user',
-      content: dto.message,
-      timestamp: new Date(),
-    };
-    session.messages.push(userMsg);
-    session.updatedAt = new Date();
+    session.messages.push({ role: 'user', content: dto.message, timestamp: new Date() });
 
-    // Build history for request (from dto or session)
-    const history =
-      dto.history ??
-      session.messages
-        .slice(-20)
-        .map((m) => ({ role: m.role, content: m.content }));
+    const history = dto.history ?? session.messages.slice(-20).map(m => ({ role: m.role, content: m.content }));
 
-    // Get AI reply
     const reply = isMock
       ? this.getMockReply(dto.message)
       : await this.callKimiApi(dto.message, dto.modelId, history);
 
-    // Add assistant message to session
-    const assistantMsg: ChatMessage = {
-      role: 'assistant',
-      content: reply,
-      timestamp: new Date(),
-    };
-    session.messages.push(assistantMsg);
-    session.updatedAt = new Date();
+    const ts = new Date();
+    session.messages.push({ role: 'assistant', content: reply, timestamp: ts });
 
-    // Update title if first message
     if (session.messages.length === 2) {
-      session.title =
-        dto.message.slice(0, 60) + (dto.message.length > 60 ? '...' : '');
+      session.title = dto.message.slice(0, 60) + (dto.message.length > 60 ? '...' : '');
     }
 
-    return {
-      reply,
-      modelId: dto.modelId,
-      sessionId: session.id,
-      timestamp: assistantMsg.timestamp,
-    };
-  }
+    // Mark messages as modified (Mongoose nested array)
+    session.markModified('messages');
+    (session as any).updatedAt = ts;
+    await session.save();
 
-  // ─── Mock AI ──────────────────────────────────────────────────────────────
+    return { reply, modelId: dto.modelId, sessionId: (session._id as any).toString(), timestamp: ts };
+  }
 
   private getMockReply(message: string): string {
-    // Simulate slight variability based on message hash
-    const idx = message.length % MOCK_RESPONSES.length;
-    return MOCK_RESPONSES[idx];
+    return MOCK_RESPONSES[message.length % MOCK_RESPONSES.length];
   }
-
-  // ─── Kimi API ─────────────────────────────────────────────────────────────
 
   private async callKimiApi(
     message: string,
     modelId: string,
     history: { role: string; content: string }[],
   ): Promise<string> {
-    const apiKey = this.configService.get<string>('KIMI_API_KEY', '');
-    const baseUrl = this.configService.get<string>(
-      'KIMI_BASE_URL',
-      'https://api.moonshot.cn/v1',
-    );
+    const apiKey = this.configService.get<string>('AI_API_KEY', '');
+    const baseUrl = this.configService.get<string>('AI_BASE_URL', 'https://api.moonshot.cn/v1');
 
     const messages = [
-      {
-        role: 'system',
-        content: 'You are a helpful AI assistant in an AI Model Hub platform.',
-      },
+      { role: 'system', content: 'You are a helpful AI assistant in an AI Model Hub platform.' },
       ...history.slice(-20),
       { role: 'user', content: message },
     ];
 
     const response = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
       body: JSON.stringify({
-        model:
-          modelId === 'kimi-moonshot' ? 'moonshot-v1-128k' : 'moonshot-v1-8k',
+        model: modelId === 'kimi-moonshot' ? 'moonshot-v1-128k' : 'moonshot-v1-8k',
         messages,
         temperature: 0.7,
         max_tokens: 2048,
       }),
     });
 
-    if (!response.ok) {
-      throw new Error(
-        `Kimi API error: ${response.status} ${response.statusText}`,
-      );
-    }
-
-    const data = (await response.json()) as {
-      choices: { message: { content: string } }[];
-    };
+    if (!response.ok) throw new Error(`Kimi API error: ${response.status}`);
+    const data = (await response.json()) as { choices: { message: { content: string } }[] };
     return data.choices?.[0]?.message?.content ?? 'No response from model.';
   }
 
-  // ─── History ──────────────────────────────────────────────────────────────
-
-  getChatHistory(userId: string, page = 1, limit = 20) {
-    const sessions = this.getUserSessions(userId);
-    const total = sessions.length;
-    const start = (page - 1) * limit;
-    const data = sessions.slice(start, start + limit);
+  async getChatHistory(userId: string, page = 1, limit = 20) {
+    const total = await this.sessionModel.countDocuments({ userId: new Types.ObjectId(userId), isGuest: false });
+    const data = await this.sessionModel
+      .find({ userId: new Types.ObjectId(userId), isGuest: false })
+      .sort({ updatedAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .exec();
     return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
-  }
-
-  // ─── Cleanup ──────────────────────────────────────────────────────────────
-
-  private cleanExpiredSessions() {
-    const now = new Date();
-    for (const [id, session] of this.sessions.entries()) {
-      if (session.isGuest && session.expiresAt && session.expiresAt < now) {
-        this.sessions.delete(id);
-      }
-    }
   }
 }

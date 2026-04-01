@@ -27,8 +27,8 @@ Runs on **http://localhost:3000**
 | `JWT_EXPIRES_IN` | Token expiry | `7d` |
 | `FRONTEND_URL` | CORS allowed origin | `http://localhost:3000` |
 | `MOCK_AI` | Use mock AI responses | `true` |
-| `KIMI_API_KEY` | Kimi (Moonshot) API key | — (optional) |
-| `KIMI_BASE_URL` | Kimi API base URL | `https://api.moonshot.cn/v1` |
+| `AI_API_KEY` | Kimi (Moonshot) API key | — (optional) |
+| `AI_BASE_URL` | Kimi API base URL | `https://api.moonshot.cn/v1` |
 
 ## API Endpoints
 
@@ -117,7 +117,7 @@ src/
 ## AI Integration
 
 - `MOCK_AI=true` → returns rotating mock responses (no API call)
-- `MOCK_AI=false` → calls Kimi (Moonshot) API at `KIMI_BASE_URL`
+- `MOCK_AI=false` → calls Kimi (Moonshot) API at `AI_BASE_URL`
 - Fallback: if Kimi call fails, returns a mock response
 
 ## Run Commands
