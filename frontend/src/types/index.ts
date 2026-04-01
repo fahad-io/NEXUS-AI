@@ -25,13 +25,18 @@ export interface ChatMessage {
   content: string;
   timestamp: string;
   modelId?: string;
+  type?: 'text' | 'voice';
+  audioUrl?: string;
+  audioDurationMs?: number;
 }
 
 export interface ChatSession {
   id: string;
+  title: string;
   messages: ChatMessage[];
   modelId: string;
   createdAt: string;
+  updatedAt?: string;
   expiresAt?: string;
   isGuest: boolean;
 }

@@ -2,6 +2,8 @@ import {
   IsString,
   IsOptional,
   IsArray,
+  IsIn,
+  IsNumber,
   MinLength,
   MaxLength,
 } from 'class-validator';
@@ -42,4 +44,22 @@ export class SendMessageDto {
   @IsOptional()
   @IsArray()
   history?: { role: 'user' | 'assistant'; content: string }[];
+
+  @ApiPropertyOptional({ enum: ['text', 'voice'], example: 'text' })
+  @IsOptional()
+  @IsIn(['text', 'voice'])
+  type?: 'text' | 'voice';
+
+  @ApiPropertyOptional({
+    description: 'Optional audio source for voice messages. Can be a data URL or uploaded file URL.',
+    example: 'data:audio/webm;base64,...',
+  })
+  @IsOptional()
+  @IsString()
+  audioUrl?: string;
+
+  @ApiPropertyOptional({ example: 12400 })
+  @IsOptional()
+  @IsNumber()
+  audioDurationMs?: number;
 }

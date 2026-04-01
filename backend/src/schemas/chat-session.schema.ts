@@ -11,6 +11,15 @@ export class ChatMessage {
   @Prop({ required: true })
   content: string;
 
+  @Prop({ enum: ['text', 'voice'], default: 'text' })
+  type?: 'text' | 'voice';
+
+  @Prop()
+  audioUrl?: string;
+
+  @Prop()
+  audioDurationMs?: number;
+
   @Prop({ default: () => new Date() })
   timestamp: Date;
 }

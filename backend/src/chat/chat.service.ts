@@ -50,6 +50,28 @@ export class ChatService {
     return result.deletedCount > 0;
   }
 
+  private serializeSession(session: ChatSessionDocument) {
+    return {
+      id: (session._id as Types.ObjectId).toString(),
+      modelId: session.modelId,
+      title: session.title,
+      isGuest: session.isGuest,
+      createdAt: (session as any).createdAt?.toISOString?.() ?? null,
+      updatedAt: (session as any).updatedAt?.toISOString?.() ?? null,
+      expiresAt: session.expiresAt?.toISOString?.() ?? null,
+      messages: session.messages.map(message => ({
+        role: message.role,
+        content: message.content,
+        type: message.type ?? 'text',
+        audioUrl: message.audioUrl,
+        audioDurationMs: message.audioDurationMs,
+        timestamp: message.timestamp instanceof Date
+          ? message.timestamp.toISOString()
+          : new Date(message.timestamp).toISOString(),
+      })),
+    };
+  }
+
   async sendMessage(dto: SendMessageDto, userId?: string, guestSessionId?: string) {
     const isMock = this.configService.get<string>('MOCK_AI', 'true') === 'true';
     const incomingSessionId = dto.sessionId || guestSessionId;
@@ -62,7 +84,14 @@ export class ChatService {
       session = await this.createSession(userId, dto.modelId);
     }
 
-    session.messages.push({ role: 'user', content: dto.message, timestamp: new Date() });
+    session.messages.push({
+      role: 'user',
+      content: dto.message,
+      type: dto.type ?? 'text',
+      audioUrl: dto.audioUrl,
+      audioDurationMs: dto.audioDurationMs,
+      timestamp: new Date(),
+    });
 
     const history = dto.history ?? session.messages.slice(-20).map(m => ({ role: m.role, content: m.content }));
 
@@ -71,7 +100,12 @@ export class ChatService {
       : await this.callKimiApi(dto.message, dto.modelId, history);
 
     const ts = new Date();
-    session.messages.push({ role: 'assistant', content: reply, timestamp: ts });
+    session.messages.push({
+      role: 'assistant',
+      content: reply,
+      type: 'text',
+      timestamp: ts,
+    });
 
     if (session.messages.length === 2) {
       session.title = dto.message.slice(0, 60) + (dto.message.length > 60 ? '...' : '');
@@ -82,7 +116,13 @@ export class ChatService {
     (session as any).updatedAt = ts;
     await session.save();
 
-    return { reply, modelId: dto.modelId, sessionId: (session._id as any).toString(), timestamp: ts };
+    return {
+      reply,
+      modelId: dto.modelId,
+      sessionId: (session._id as any).toString(),
+      timestamp: ts,
+      session: this.serializeSession(session),
+    };
   }
 
   private getMockReply(message: string): string {
@@ -127,6 +167,12 @@ export class ChatService {
       .skip((page - 1) * limit)
       .limit(limit)
       .exec();
-    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
+    return {
+      data: data.map(session => this.serializeSession(session)),
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 }

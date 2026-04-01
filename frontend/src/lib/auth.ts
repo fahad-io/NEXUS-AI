@@ -1,31 +1,83 @@
 import { AuthState, User } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
+import { getCachedValue, removeCachedValue, setCachedValue } from '@/lib/cache';
 
-const GUEST_SESSION_DURATION = 3 * 60 * 60 * 1000; // 3 hours
+const GUEST_SESSION_DURATION = 3 * 60 * 60 * 1000;
+const GUEST_SESSION_CACHE_KEY = 'nexusai_guest_session';
+const LEGACY_GUEST_ID_KEY = 'nexusai_session_id';
+const LEGACY_GUEST_EXPIRY_KEY = 'nexusai_session_expiry';
+
+interface GuestSessionCache {
+  id: string;
+  expiresAt: number;
+}
+
+function readGuestSession(): GuestSessionCache | null {
+  const cached = getCachedValue<GuestSessionCache>(GUEST_SESSION_CACHE_KEY, 'session');
+  if (cached) return cached;
+
+  if (typeof window === 'undefined') return null;
+
+  const legacyId = localStorage.getItem(LEGACY_GUEST_ID_KEY);
+  const legacyExpiry = localStorage.getItem(LEGACY_GUEST_EXPIRY_KEY);
+  if (!legacyId || !legacyExpiry) return null;
+
+  const expiresAt = Number(legacyExpiry);
+  if (!expiresAt || Date.now() >= expiresAt) {
+    localStorage.removeItem(LEGACY_GUEST_ID_KEY);
+    localStorage.removeItem(LEGACY_GUEST_EXPIRY_KEY);
+    return null;
+  }
+
+  const migrated = { id: legacyId, expiresAt };
+  setCachedValue(GUEST_SESSION_CACHE_KEY, migrated, {
+    scope: 'session',
+    ttlMs: Math.max(expiresAt - Date.now(), 1),
+  });
+  localStorage.removeItem(LEGACY_GUEST_ID_KEY);
+  localStorage.removeItem(LEGACY_GUEST_EXPIRY_KEY);
+  return migrated;
+}
+
+export function getGuestSessionId(): string | null {
+  return readGuestSession()?.id ?? null;
+}
 
 export function getAuthState(): AuthState {
   if (typeof window === 'undefined') {
     return { user: null, token: null, isAuthenticated: false, isGuest: false, sessionId: null, sessionExpiry: null };
   }
+
   const token = localStorage.getItem('nexusai_token');
   const userStr = localStorage.getItem('nexusai_user');
-  const sessionId = localStorage.getItem('nexusai_session_id');
-  const sessionExpiry = localStorage.getItem('nexusai_session_expiry');
+  const guestSession = readGuestSession();
 
   if (token && userStr) {
     try {
       const user: User = JSON.parse(userStr);
-      return { user, token, isAuthenticated: true, isGuest: false, sessionId, sessionExpiry: null };
-    } catch { /* ignore */ }
+      return {
+        user,
+        token,
+        isAuthenticated: true,
+        isGuest: false,
+        sessionId: null,
+        sessionExpiry: null,
+      };
+    } catch {
+      localStorage.removeItem('nexusai_user');
+      localStorage.removeItem('nexusai_token');
+    }
   }
 
-  if (sessionId && sessionExpiry) {
-    const expiry = parseInt(sessionExpiry, 10);
-    if (Date.now() < expiry) {
-      return { user: null, token: null, isAuthenticated: false, isGuest: true, sessionId, sessionExpiry: expiry };
-    } else {
-      clearGuestSession();
-    }
+  if (guestSession) {
+    return {
+      user: null,
+      token: null,
+      isAuthenticated: false,
+      isGuest: true,
+      sessionId: guestSession.id,
+      sessionExpiry: guestSession.expiresAt,
+    };
   }
 
   return { user: null, token: null, isAuthenticated: false, isGuest: false, sessionId: null, sessionExpiry: null };
@@ -33,18 +85,20 @@ export function getAuthState(): AuthState {
 
 export function createGuestSession(): string {
   const id = uuidv4();
-  const expiry = Date.now() + GUEST_SESSION_DURATION;
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('nexusai_session_id', id);
-    localStorage.setItem('nexusai_session_expiry', expiry.toString());
-  }
+  const expiresAt = Date.now() + GUEST_SESSION_DURATION;
+  setCachedValue(
+    GUEST_SESSION_CACHE_KEY,
+    { id, expiresAt },
+    { scope: 'session', ttlMs: GUEST_SESSION_DURATION },
+  );
   return id;
 }
 
 export function clearGuestSession() {
+  removeCachedValue(GUEST_SESSION_CACHE_KEY, 'session');
   if (typeof window === 'undefined') return;
-  localStorage.removeItem('nexusai_session_id');
-  localStorage.removeItem('nexusai_session_expiry');
+  window.localStorage.removeItem(LEGACY_GUEST_ID_KEY);
+  window.localStorage.removeItem(LEGACY_GUEST_EXPIRY_KEY);
 }
 
 export function setAuthToken(token: string, user: User) {

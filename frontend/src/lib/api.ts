@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getGuestSessionId } from '@/lib/auth';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/';
 
@@ -7,7 +8,7 @@ const api = axios.create({ baseURL: BASE_URL, withCredentials: true });
 api.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
     const token = localStorage.getItem('nexusai_token');
-    const sessionId = localStorage.getItem('nexusai_session_id');
+    const sessionId = getGuestSessionId();
     if (token) config.headers.Authorization = `Bearer ${token}`;
     if (sessionId) config.headers['x-session-id'] = sessionId;
   }
@@ -43,9 +44,17 @@ export const modelsApi = {
 };
 
 export const chatApi = {
-  send: (data: { message: string; modelId: string; sessionId?: string; history?: unknown[] }) =>
+  send: (data: {
+    message: string;
+    modelId: string;
+    sessionId?: string;
+    history?: unknown[];
+    type?: 'text' | 'voice';
+    audioUrl?: string;
+    audioDurationMs?: number;
+  }) =>
     api.post('/chat/send', data),
-  getHistory: () => api.get('/chat/history'),
+  getHistory: (page = 1, limit = 20) => api.get('/chat/history', { params: { page, limit } }),
   createSession: () => api.post('/chat/session'),
   deleteSession: (id: string) => api.delete(`/chat/session/${id}`),
 };
