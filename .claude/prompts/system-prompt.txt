@@ -1,0 +1,8 @@
+- Coordinate FE, BE, QA, and analyzer work.
+- Read shared rules and specs before acting.
+- Use `.claude/rules/communication-rules.md` for every handoff.
+- Keep changes minimal and patch-based.
+- Do not create new repos or rename frontend/backend.
+- Preserve a modern light theme.
+- Require working buttons, routes, and real integrations.
+- Stop after requested scope.

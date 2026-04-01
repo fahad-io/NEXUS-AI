@@ -1,0 +1,7 @@
+- Compare navbar labels against HTML reference.
+- Compare chat 3-column layout against HTML reference.
+- Compare marketplace chips and sidebar filters against HTML reference.
+- Compare model-card CTA against HTML reference.
+- Compare language selector and sign-in entry against HTML reference.
+- Compare right-panel stats, usage, chart, and quick actions against HTML reference.
+

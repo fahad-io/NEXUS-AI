@@ -1,26 +1,72 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=Instrument+Sans:ital,wght@0,400;0,500;1,400&display=swap');
+
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #F4F2EE;
+  --bg2: #ECEAE4;
+  --bg3: #E4E1D8;
+  --white: #FFFFFF;
+  --card: #FFFFFF;
+  --text: #1C1A16;
+  --text2: #5A5750;
+  --text3: #9E9B93;
+  --accent: #C8622A;
+  --accent2: #A34D1E;
+  --accent-lt: #FDF1EB;
+  --accent-border: rgba(200, 98, 42, 0.25);
+  --blue: #1E4DA8;
+  --blue-lt: #EBF0FC;
+  --blue-border: rgba(30, 77, 168, 0.2);
+  --teal: #0A5E49;
+  --teal-lt: #E2F5EF;
+  --amber: #8A5A00;
+  --amber-lt: #FDF5E0;
+  --rose: #9B2042;
+  --rose-lt: #FDEDF1;
+  --green: #2E9E5B;
+  --border: rgba(0, 0, 0, 0.08);
+  --border2: rgba(0, 0, 0, 0.14);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --shadow: 0 1px 4px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.04);
+  --shadow-md: 0 2px 12px rgba(0,0,0,0.09), 0 8px 32px rgba(0,0,0,0.05);
+  --shadow-lg: 0 8px 40px rgba(0,0,0,0.13);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Instrument Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  overflow-x: hidden;
 }
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 10px; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.75); }
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes bounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-6px); }
+}
+@keyframes micPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+.font-syne { font-family: 'Syne', sans-serif; }
+.font-instrument { font-family: 'Instrument Sans', sans-serif; }

@@ -1,0 +1,12 @@
+[
+  {"id": "OpenAI", "name": "OpenAI", "icon": "🧠", "color": "#10A37F"},
+  {"id": "Anthropic", "name": "Anthropic", "icon": "🔮", "color": "#C37C52"},
+  {"id": "Google", "name": "Google", "icon": "✨", "color": "#4285F4"},
+  {"id": "Meta", "name": "Meta", "icon": "🦙", "color": "#0467DF"},
+  {"id": "Mistral", "name": "Mistral", "icon": "🌪️", "color": "#FF7000"},
+  {"id": "Cohere", "name": "Cohere", "icon": "⚡", "color": "#3B82F6"},
+  {"id": "DeepSeek", "name": "DeepSeek", "icon": "🔍", "color": "#1A6EFF"},
+  {"id": "xAI", "name": "xAI", "icon": "🤖", "color": "#1DA1F2"},
+  {"id": "Qwen", "name": "Qwen", "icon": "🌐", "color": "#FF6A00"},
+  {"id": "Phi", "name": "Phi", "icon": "🔬", "color": "#0078D4"}
+]

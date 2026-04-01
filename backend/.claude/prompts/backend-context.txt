@@ -1,0 +1,10 @@
+- Stack target: NestJS + MongoDB + REST APIs.
+- Read root `.claude/rules/communication-rules.md` before cross-scope handoffs.
+- Provide JWT access tokens and refresh tokens.
+- Support guest sessions with 3-hour expiry.
+- Allow optional guest-session migration after login.
+- Expose model metadata, chat, auth, and usage endpoints.
+- Keep request validation strict and response shapes stable.
+- Never expose provider secrets to the frontend.
+- Avoid placeholder endpoints.
+- Report contract changes back to frontend explicitly.

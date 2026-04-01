@@ -1,0 +1,31 @@
+# Root Claude Guide
+
+- Scope:
+  - Shared coordination layer for the monorepo.
+  - Owns shared rules, specs, workflows, commands, prompts, and cross-app agents.
+- Read first:
+  - `rules/global-rules.md`
+  - `rules/communication-rules.md`
+  - `specs/product-spec.md`
+  - `workflows/workflow-main.md`
+- Use this folder for:
+  - Shared decisions across frontend and backend.
+  - QA and analyzer reviews.
+  - Release and coordination flow.
+- Communication:
+  - Frontend and backend handoffs must follow `rules/communication-rules.md`.
+  - Root rules override app-specific guidance on conflicts.
+- Main references:
+  - `agents/qa-agent.md`
+  - `agents/analyzer-agent.md`
+  - `skills/coordination-skill.md`
+  - `prompts/system-prompt.txt`
+- Expected handoff fields:
+  - source
+  - target
+  - scope
+  - changed or planned files
+  - blockers
+  - requested next action
+  - done definition
+
