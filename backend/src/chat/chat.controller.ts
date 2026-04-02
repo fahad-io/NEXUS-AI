@@ -17,6 +17,7 @@ import { ChatService } from './chat.service';
 import { SendMessageDto } from './dto/send-message.dto';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { Public } from '../auth/public.decorator';
+import { OptionalAuth } from '../auth/optional-auth.decorator';
 
 @ApiTags('Chat')
 @Controller('chat')
@@ -28,7 +29,7 @@ export class ChatController {
    * Guests must supply an X-Session-Id header (or provide sessionId in body).
    * If no session exists a new one is created automatically.
    */
-  @Public()
+  @OptionalAuth()
   @Post('send')
   @HttpCode(HttpStatus.OK)
   async send(
@@ -46,6 +47,14 @@ export class ChatController {
   async createSession(@Body() dto: CreateSessionDto, @Request() req: any) {
     const session = await this.chatService.createSession(req.user.id, dto.modelId, dto.title);
     return { sessionId: (session._id as any).toString(), session };
+  }
+
+  @ApiBearerAuth('bearer')
+  @Get('session/:id')
+  async getSession(@Param('id') id: string, @Request() req: any) {
+    const session = await this.chatService.getUserSession(id, req.user.id);
+    if (!session) throw new NotFoundException('Session not found or access denied');
+    return session;
   }
 
   @ApiBearerAuth('bearer')

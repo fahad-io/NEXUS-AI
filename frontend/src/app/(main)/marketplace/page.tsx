@@ -1,9 +1,9 @@
 'use client';
 import { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
 import { useModels } from '@/hooks/useModels';
 import { FALLBACK_MODELS } from '@/lib/models-fallback';
 import { AIModel } from '@/types';
+import ModelDetailDialog from '@/components/ui/ModelDetailDialog';
 
 const LABS = ['OpenAI', 'Anthropic', 'Google', 'Meta', 'Mistral', 'xAI', 'DeepSeek', 'Cohere', 'Stability AI', 'ElevenLabs', 'Midjourney', 'Microsoft', 'Alibaba'];
 const TYPE_FILTERS = [
@@ -38,8 +38,7 @@ function StarRating({ rating }: { rating: number }) {
   );
 }
 
-function MCard({ model }: { model: AIModel }) {
-  const router = useRouter();
+function MCard({ model, onOpenDialog }: { model: AIModel; onOpenDialog: (m: AIModel) => void }) {
   const [hovered, setHovered] = useState(false);
   const badgeStyle = model.badge ? BADGE_STYLES[model.badge] : null;
 
@@ -125,7 +124,7 @@ function MCard({ model }: { model: AIModel }) {
           <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--accent2)' }}>{model.price}</span>
         </div>
         <button
-          onClick={() => router.push(`/chat?model=${model.id}`)}
+          onClick={() => onOpenDialog(model)}
           style={{
             padding: '0.48rem 0.9rem',
             background: hovered ? 'var(--gradient)' : 'var(--accent-lt)',
@@ -157,6 +156,8 @@ export default function MarketplacePage() {
   const [pricingFilter, setPricingFilter] = useState<string[]>([]);
   const [minRating, setMinRating] = useState(0);
   const [licenseFilter, setLicenseFilter] = useState<string[]>([]);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogModel, setDialogModel] = useState<AIModel>(FALLBACK_MODELS[0]);
 
   const toggleArr = (arr: string[], val: string): string[] =>
     arr.includes(val) ? arr.filter(x => x !== val) : [...arr, val];
@@ -341,7 +342,7 @@ export default function MarketplacePage() {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: '1rem' }}>
             {filtered.map(model => (
-              <MCard key={model.id} model={model} />
+              <MCard key={model.id} model={model} onOpenDialog={m => { setDialogModel(m); setDialogOpen(true); }} />
             ))}
           </div>
           {filtered.length === 0 && (
@@ -365,6 +366,12 @@ export default function MarketplacePage() {
           )}
         </div>
       </div>
+
+      <ModelDetailDialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        model={dialogModel}
+      />
     </div>
   );
 }

@@ -36,6 +36,12 @@ export class ChatService {
     return this.sessionModel.findById(sessionId).exec();
   }
 
+  async getUserSession(sessionId: string, userId: string): Promise<ChatSessionDocument | null> {
+    const session = await this.sessionModel.findById(sessionId).exec();
+    if (!session || session.userId?.toString() !== userId || session.isGuest) return null;
+    return session;
+  }
+
   async getUserSessions(userId: string): Promise<ChatSessionDocument[]> {
     return this.sessionModel
       .find({ userId: new Types.ObjectId(userId), isGuest: false })
@@ -75,14 +81,31 @@ export class ChatService {
 
   async sendMessage(dto: SendMessageDto, userId?: string, guestSessionId?: string) {
     const isMock = this.configService.get<string>('MOCK_AI', 'true') === 'true';
-    const incomingSessionId = dto.sessionId || guestSessionId;
 
     let session: ChatSessionDocument | null = null;
-    if (incomingSessionId) {
-      try { session = await this.getSession(incomingSessionId); } catch { /* invalid id */ }
-    }
-    if (!session) {
-      session = await this.createSession(userId, dto.modelId);
+
+    if (userId) {
+      // Authenticated user: only use/create user-owned sessions
+      if (dto.sessionId) {
+        try {
+          const candidate = await this.getSession(dto.sessionId);
+          if (candidate && candidate.userId?.toString() === userId && !candidate.isGuest) {
+            session = candidate;
+          }
+        } catch { /* invalid id */ }
+      }
+      if (!session) {
+        session = await this.createSession(userId, dto.modelId);
+      }
+    } else {
+      // Guest: use guestSessionId header or dto.sessionId
+      const incomingSessionId = dto.sessionId || guestSessionId;
+      if (incomingSessionId) {
+        try { session = await this.getSession(incomingSessionId); } catch { /* invalid id */ }
+      }
+      if (!session) {
+        session = await this.createSession(undefined, dto.modelId);
+      }
     }
 
     session.messages.push({

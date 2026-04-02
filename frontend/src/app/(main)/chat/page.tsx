@@ -275,6 +275,7 @@ function ChatPageInner() {
   const [activeModelId, setActiveModelId] = useState(
     searchParams.get('model') || allModels[0]?.id || 'gpt-5',
   );
+  const sessionParamId = searchParams.get('session');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
@@ -460,7 +461,7 @@ function ChatPageInner() {
 
     chatApi
       .getHistory(1, USER_HISTORY_LIMIT)
-      .then(response => {
+      .then(async response => {
         if (cancelled) return;
 
         const remoteSessions: ChatSession[] = Array.isArray(response.data?.data)
@@ -478,14 +479,24 @@ function ChatPageInner() {
         setChatSessions(mergedSessions);
 
         const cachedActiveSessionId = getCachedActiveUserSessionId(userId);
-        const nextActive =
-          mergedSessions.find(
-            session =>
-              session.id === activeSessionIdRef.current ||
-              session.id === cachedActiveSessionId,
-          ) ??
+        const preferredId = sessionParamId ?? activeSessionIdRef.current ?? cachedActiveSessionId;
+        let nextActive =
+          mergedSessions.find(session => session.id === preferredId) ??
           mergedSessions[0] ??
           null;
+
+        // If URL param points to a session not in the list, fetch it directly
+        if (sessionParamId && !nextActive) {
+          try {
+            const res = await chatApi.getSession(sessionParamId);
+            if (res.data) {
+              const fetched = normalizeSession(res.data as BackendChatSession);
+              mergedSessions.unshift(fetched);
+              setChatSessions([...mergedSessions]);
+              nextActive = fetched;
+            }
+          } catch { /* session not found or no access */ }
+        }
 
         setActiveSessionId(nextActive?.id ?? null);
         setMessages(nextActive?.messages ?? []);
@@ -503,7 +514,7 @@ function ChatPageInner() {
     return () => {
       cancelled = true;
     };
-  }, [auth.isAuthenticated, auth.user?.id]);
+  }, [auth.isAuthenticated, auth.user?.id, sessionParamId]);
 
   useEffect(() => {
     const userId = auth.user?.id;

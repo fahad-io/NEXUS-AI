@@ -84,7 +84,7 @@ api.interceptors.request.use((config) => {
     config.headers = headers;
   }
 
-  if (sessionId) {
+  if (sessionId && !token) {
     const headers = AxiosHeaders.from(config.headers);
     headers.set('x-session-id', sessionId);
     config.headers = headers;
@@ -163,6 +163,7 @@ export const chatApi = {
   }) =>
     api.post('/chat/send', data),
   getHistory: (page = 1, limit = 20) => api.get('/chat/history', { params: { page, limit } }),
+  getSession: (id: string) => api.get(`/chat/session/${id}`),
   createSession: () => api.post('/chat/session'),
   deleteSession: (id: string) => api.delete(`/chat/session/${id}`),
 };
@@ -171,7 +172,7 @@ export const uploadApi = {
   upload: (file: File) => {
     const fd = new FormData();
     fd.append('file', file);
-    return api.post('/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+    return api.post('/upload', fd);
   },
 };
 

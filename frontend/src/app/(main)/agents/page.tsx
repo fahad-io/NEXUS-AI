@@ -1,18 +1,29 @@
 'use client';
 import { useState } from 'react';
+import { FALLBACK_MODELS } from '@/lib/models-fallback';
+import { AIModel } from '@/types';
+import ModelDetailDialog from '@/components/ui/ModelDetailDialog';
 
 const TEMPLATES = [
-  { icon: '🔍', name: 'Research Agent', desc: 'Autonomously search, summarise, and compile research reports on any topic.', tags: ['GPT-5', 'Web search', 'Reports'], color: '#EEF2FD' },
-  { icon: '💼', name: 'Customer Support', desc: 'Handle customer inquiries, route tickets, and escalate complex issues automatically.', tags: ['GPT-5', 'Ticketing', 'Escalation'], color: '#FDF5F0' },
-  { icon: '💻', name: 'Code Review', desc: 'Automatically review pull requests for bugs, style issues, and test coverage gaps.', tags: ['Claude Opus', 'Analysis', 'Code', 'Tests'], color: '#EEF8F4' },
-  { icon: '📊', name: 'Data Analysis', desc: 'Connect to data sources, run analysis, and generate visualisation reports.', tags: ['Gemini', 'Data', 'Python', 'Visualization'], color: '#EBF5FB' },
-  { icon: '✍️', name: 'Content Writer', desc: 'Create SEO-optimised blog posts, social media content, and marketing copy at scale.', tags: ['Claude Sonnet', 'SEO', 'Marketing'], color: '#F5F0FF' },
-  { icon: '🧩', name: 'Workflow Automator', desc: 'Connect your apps and automate multi-step workflows with AI decision logic.', tags: ['Any model', 'Automation', 'Integration'], color: '#FFF0F5' },
-  { icon: '➕', name: 'Build from Scratch', desc: 'Design a fully custom agent with your own tools, models, and logic from scratch.', tags: ['Any model', 'Custom'], color: '#F4F2EE' },
+  { icon: '🔍', name: 'Research Agent',      desc: 'Autonomously search, summarise, and compile research reports on any topic.',               tags: ['GPT-5', 'Web search', 'Reports'],         color: '#EEF2FD', modelId: 'gpt-5' },
+  { icon: '💼', name: 'Customer Support',     desc: 'Handle customer inquiries, route tickets, and escalate complex issues automatically.',     tags: ['GPT-5', 'Ticketing', 'Escalation'],       color: '#FDF5F0', modelId: 'gpt-5' },
+  { icon: '💻', name: 'Code Review',          desc: 'Automatically review pull requests for bugs, style issues, and test coverage gaps.',       tags: ['Claude Opus', 'Analysis', 'Code', 'Tests'], color: '#EEF8F4', modelId: 'claude-opus-4' },
+  { icon: '📊', name: 'Data Analysis',        desc: 'Connect to data sources, run analysis, and generate visualisation reports.',              tags: ['Gemini', 'Data', 'Python', 'Visualization'], color: '#EBF5FB', modelId: 'gemini-2-pro' },
+  { icon: '✍️', name: 'Content Writer',       desc: 'Create SEO-optimised blog posts, social media content, and marketing copy at scale.',     tags: ['Claude Sonnet', 'SEO', 'Marketing'],      color: '#F5F0FF', modelId: 'claude-sonnet-4' },
+  { icon: '🧩', name: 'Workflow Automator',   desc: 'Connect your apps and automate multi-step workflows with AI decision logic.',             tags: ['Any model', 'Automation', 'Integration'], color: '#FFF0F5', modelId: 'gpt-5' },
+  { icon: '➕', name: 'Build from Scratch',   desc: 'Design a fully custom agent with your own tools, models, and logic from scratch.',        tags: ['Any model', 'Custom'],                    color: '#F4F2EE', modelId: 'gpt-5' },
 ];
 
 export default function AgentsPage() {
   const [bannerDismissed, setBannerDismissed] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogModel, setDialogModel] = useState<AIModel>(FALLBACK_MODELS[0]);
+
+  const openDialog = (modelId: string) => {
+    const model = FALLBACK_MODELS.find(m => m.id === modelId) ?? FALLBACK_MODELS[0];
+    setDialogModel(model);
+    setDialogOpen(true);
+  };
 
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
@@ -51,7 +62,7 @@ export default function AgentsPage() {
         <h2 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: '1.2rem', color: 'var(--text)', marginBottom: '1rem' }}>Agent Templates</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
           {TEMPLATES.map(t => (
-            <TemplateCard key={t.name} template={t} />
+            <TemplateCard key={t.name} template={t} onUse={() => openDialog(t.modelId)} />
           ))}
         </div>
 
@@ -65,11 +76,17 @@ export default function AgentsPage() {
           </div>
         </div>
       </div>
+
+      <ModelDetailDialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        model={dialogModel}
+      />
     </div>
   );
 }
 
-function TemplateCard({ template }: { template: typeof TEMPLATES[0] }) {
+function TemplateCard({ template, onUse }: { template: typeof TEMPLATES[0]; onUse: () => void }) {
   const [hovered, setHovered] = useState(false);
 
   return (
@@ -99,7 +116,16 @@ function TemplateCard({ template }: { template: typeof TEMPLATES[0] }) {
           <span key={tag} style={{ padding: '0.2rem 0.55rem', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '2rem', fontSize: '0.7rem', color: 'var(--text2)' }}>{tag}</span>
         ))}
       </div>
-      <a href="#" style={{ fontSize: '0.82rem', color: 'var(--accent)', fontWeight: 600, textDecoration: 'none', marginTop: 'auto' }}>Use template →</a>
+      <button
+        onClick={onUse}
+        style={{
+          background: 'none', border: 'none', cursor: 'pointer',
+          fontSize: '0.82rem', color: 'var(--accent)', fontWeight: 600,
+          textAlign: 'left', padding: 0, fontFamily: 'inherit', marginTop: 'auto',
+        }}
+      >
+        Use template →
+      </button>
     </div>
   );
 }
