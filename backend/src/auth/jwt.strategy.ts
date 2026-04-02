@@ -20,8 +20,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
       secretOrKey: configService.get<string>(
-        'JWT_SECRET',
-        'nexusai_super_secret_key_2024',
+        'JWT_ACCESS_SECRET',
+        configService.get<string>(
+          'JWT_SECRET',
+          'nexusai_super_secret_key_2024',
+        ),
       ),
     });
   }

@@ -6,6 +6,7 @@
 - Read first:
   - `rules/global-rules.md`
   - `rules/communication-rules.md`
+  - `rules/token-rules.md`
   - `specs/product-spec.md`
   - `workflows/workflow-main.md`
 - Use this folder for:
@@ -20,6 +21,7 @@
   - `agents/analyzer-agent.md`
   - `skills/coordination-skill.md`
   - `prompts/system-prompt.txt`
+  - `prompts/lean-output-prompt.txt`
 - Expected handoff fields:
   - source
   - target
@@ -28,4 +30,3 @@
   - blockers
   - requested next action
   - done definition
-

@@ -65,6 +65,7 @@ export class ChatService {
         type: message.type ?? 'text',
         audioUrl: message.audioUrl,
         audioDurationMs: message.audioDurationMs,
+        attachments: message.attachments ?? [],
         timestamp: message.timestamp instanceof Date
           ? message.timestamp.toISOString()
           : new Date(message.timestamp).toISOString(),
@@ -90,6 +91,7 @@ export class ChatService {
       type: dto.type ?? 'text',
       audioUrl: dto.audioUrl,
       audioDurationMs: dto.audioDurationMs,
+      attachments: dto.attachments ?? [],
       timestamp: new Date(),
     });
 

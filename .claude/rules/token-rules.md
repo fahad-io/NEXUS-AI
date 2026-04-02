@@ -1,10 +1,22 @@
 # Token Rules
 
-- Reduce repeated explanations.
-- Prefer patch-based edits.
-- Avoid rewriting full files unnecessarily.
-- Output only required code changes.
-- Reuse shared terms instead of restating context.
+- Optimize for signal density.
+- Solve the task first, explain only what helps the next decision.
+- Reduce repeated explanations and avoid restating the prompt.
+- Prefer patch-based edits and avoid rewriting full files unnecessarily.
+- Output only required code changes, key reasoning, and verification.
+- Reuse shared terms instead of re-explaining established context.
 - Summarize large diffs instead of copying full content.
+- Prefer file references over pasted code when the file already exists.
+- Default to short paragraphs or flat bullets, not long outlines.
+- Ask questions only when the answer is blocking or risky.
+- For status updates, report progress, current blocker, and next action in 1 to 3 lines.
+- For final answers, include only:
+  - what changed
+  - why it matters
+  - verification or remaining risk
+- Avoid filler:
+  - no motivational padding
+  - no obvious commentary
+  - no exhaustive option lists unless asked
 - Keep prompts short, concrete, and directly actionable.
-

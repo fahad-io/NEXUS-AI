@@ -16,6 +16,9 @@ export class User {
 
   @Prop({ enum: ['user', 'guest'], default: 'user' })
   role: 'user' | 'guest';
+
+  @Prop({ type: String, select: false, default: null })
+  refreshTokenHash?: string | null;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

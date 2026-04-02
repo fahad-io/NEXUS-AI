@@ -6,8 +6,10 @@ import {
   IsNumber,
   MinLength,
   MaxLength,
+  ValidateNested,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 
 class ChatHistoryItemDto {
   @ApiProperty({ enum: ['user', 'assistant'], example: 'user' })
@@ -15,6 +17,29 @@ class ChatHistoryItemDto {
 
   @ApiProperty({ example: 'Can you help me summarize this file?' })
   content: string;
+}
+
+class MessageAttachmentDto {
+  @ApiProperty({ example: 'camera-clip.webm' })
+  @IsString()
+  name: string;
+
+  @ApiProperty({ example: '/uploads/camera-clip.webm' })
+  @IsString()
+  url: string;
+
+  @ApiProperty({ example: 'video/webm' })
+  @IsString()
+  mimeType: string;
+
+  @ApiProperty({ enum: ['image', 'video', 'file'], example: 'video' })
+  @IsIn(['image', 'video', 'file'])
+  kind: 'image' | 'video' | 'file';
+
+  @ApiPropertyOptional({ example: 5242880 })
+  @IsOptional()
+  @IsNumber()
+  size?: number;
 }
 
 export class SendMessageDto {
@@ -62,4 +87,14 @@ export class SendMessageDto {
   @IsOptional()
   @IsNumber()
   audioDurationMs?: number;
+
+  @ApiPropertyOptional({
+    type: [MessageAttachmentDto],
+    description: 'Optional uploaded media or files attached to the message.',
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => MessageAttachmentDto)
+  attachments?: MessageAttachmentDto[];
 }

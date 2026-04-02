@@ -8,6 +8,7 @@ import { JwtStrategy } from './jwt.strategy';
 import { LocalStrategy } from './local.strategy';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { UsersModule } from '../users/users.module';
+import type { StringValue } from 'ms';
 
 @Module({
   imports: [
@@ -17,10 +18,18 @@ import { UsersModule } from '../users/users.module';
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>(
-          'JWT_SECRET',
-          'nexusai_super_secret_key_2024',
+          'JWT_ACCESS_SECRET',
+          configService.get<string>(
+            'JWT_SECRET',
+            'nexusai_super_secret_key_2024',
+          ),
         ),
-        signOptions: { expiresIn: '7d' as const },
+        signOptions: {
+          expiresIn: configService.get<string>(
+            'JWT_ACCESS_EXPIRES_IN',
+            '15m',
+          ) as StringValue,
+        },
       }),
       inject: [ConfigService],
     }),

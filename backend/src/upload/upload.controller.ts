@@ -13,6 +13,7 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { UploadService } from './upload.service';
+import { Public } from '../auth/public.decorator';
 
 @ApiTags('Upload')
 @ApiBearerAuth('bearer')
@@ -20,6 +21,7 @@ import { UploadService } from './upload.service';
 export class UploadController {
   constructor(private readonly uploadService: UploadService) {}
 
+  @Public()
   @Post()
   @HttpCode(HttpStatus.OK)
   @ApiConsumes('multipart/form-data')
@@ -44,13 +46,16 @@ export class UploadController {
           cb(null, uniqueName);
         },
       }),
-      limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+      limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB
       fileFilter: (_req, file, cb) => {
         const allowed = [
           'image/jpeg',
           'image/png',
           'image/gif',
           'image/webp',
+          'video/webm',
+          'video/mp4',
+          'video/quicktime',
           'application/pdf',
           'text/plain',
           'application/json',

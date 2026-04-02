@@ -1,8 +1,16 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
-import { AuthState, User } from '@/types';
-import { getAuthState, setAuthToken, clearAuth, createGuestSession, clearGuestSession } from '@/lib/auth';
-import { authApi } from '@/lib/api';
+import { AuthState } from '@/types';
+import {
+  getAuthState,
+  hasStoredAuthSessionHint,
+  setAuthToken,
+  clearAuth,
+  createGuestSession,
+  clearGuestSession,
+  subscribeToAuthChanges,
+} from '@/lib/auth';
+import { authApi, refreshAuthSession } from '@/lib/api';
 
 export function useAuth() {
   const [auth, setAuth] = useState<AuthState>({
@@ -11,8 +19,36 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setAuth(getAuthState());
-    setLoading(false);
+    let active = true;
+
+    const syncAuth = () => {
+      if (!active) return;
+      setAuth(getAuthState());
+    };
+
+    const initialize = async () => {
+      const initialAuth = getAuthState();
+      if (active) setAuth(initialAuth);
+
+      if (!initialAuth.isAuthenticated && hasStoredAuthSessionHint()) {
+        try {
+          await refreshAuthSession();
+        } catch {
+          // A missing/expired refresh cookie can happen after the browser kept stale state.
+        }
+      }
+
+      syncAuth();
+      if (active) setLoading(false);
+    };
+
+    const unsubscribe = subscribeToAuthChanges(syncAuth);
+    void initialize();
+
+    return () => {
+      active = false;
+      unsubscribe();
+    };
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
@@ -32,20 +68,20 @@ export function useAuth() {
   }, []);
 
   const logout = useCallback(() => {
+    void authApi.logout().catch(() => undefined);
     clearAuth();
-    setAuth({ user: null, token: null, isAuthenticated: false, isGuest: false, sessionId: null, sessionExpiry: null });
+    setAuth(getAuthState());
   }, []);
 
   const startGuestSession = useCallback(() => {
     const id = createGuestSession();
-    const expiry = Date.now() + 3 * 60 * 60 * 1000;
-    setAuth(prev => ({ ...prev, isGuest: true, sessionId: id, sessionExpiry: expiry }));
+    setAuth(getAuthState());
     return id;
   }, []);
 
   const endGuestSession = useCallback(() => {
     clearGuestSession();
-    setAuth(prev => ({ ...prev, isGuest: false, sessionId: null, sessionExpiry: null }));
+    setAuth(getAuthState());
   }, []);
 
   return { auth, loading, login, signup, logout, startGuestSession, endGuestSession };

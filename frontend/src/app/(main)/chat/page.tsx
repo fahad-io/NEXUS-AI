@@ -2,16 +2,25 @@
 
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import {
+  Camera,
+  Circle,
+  FileUp,
+  ImagePlus,
+  Mic,
+  Square,
+} from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useModels } from '@/hooks/useModels';
 import { FALLBACK_MODELS } from '@/lib/models-fallback';
-import { chatApi } from '@/lib/api';
+import { chatApi, resolveBackendUrl, uploadApi } from '@/lib/api';
 import {
   ChatMessage,
   ChatSession,
   CPANEL_DATA,
   QUICK_ACTIONS,
   AIModel,
+  MessageAttachment,
 } from '@/types';
 import GuestBanner from '@/components/chat/GuestBanner';
 import { toast } from '@/components/ui/Toast';
@@ -59,11 +68,18 @@ const TAB_LABELS: Record<string, string> = {
 const GUEST_CHAT_TTL_MS = 3 * 60 * 60 * 1000;
 const USER_HISTORY_LIMIT = 20;
 const VOICE_NOTE_MAX_MS = 60_000;
+const CAMERA_VIDEO_MAX_MS = 30_000;
 
 interface VoiceDraft {
   audioUrl: string;
   durationMs: number;
 }
+
+interface ComposerAttachment extends MessageAttachment {
+  id: string;
+}
+
+type CameraMode = 'photo' | 'video';
 
 interface BackendChatSession {
   id?: string;
@@ -119,6 +135,45 @@ function renderMarkdown(text: string) {
   });
 }
 
+function getAttachmentKind(mimeType: string): MessageAttachment['kind'] {
+  if (mimeType.startsWith('image/')) return 'image';
+  if (mimeType.startsWith('video/')) return 'video';
+  return 'file';
+}
+
+function getComposerPlaceholderMessage(
+  text: string,
+  draft?: VoiceDraft | null,
+  attachments: MessageAttachment[] = [],
+) {
+  const trimmedText = text.trim();
+  if (trimmedText) return trimmedText;
+  if (draft) return 'Voice message';
+  if (attachments.some(attachment => attachment.kind === 'video')) return 'Shared a video';
+  if (attachments.some(attachment => attachment.kind === 'image')) return 'Shared a photo';
+  if (attachments.length > 0) return 'Shared attachments';
+  return '';
+}
+
+function shouldRenderMessageText(message: ChatMessage) {
+  const trimmedContent = message.content.trim();
+  const attachmentPlaceholderMessages = new Set([
+    'Shared a video',
+    'Shared a photo',
+    'Shared attachments',
+  ]);
+
+  if (message.type === 'voice' && trimmedContent === 'Voice message') {
+    return false;
+  }
+
+  if ((message.attachments?.length ?? 0) > 0 && attachmentPlaceholderMessages.has(trimmedContent)) {
+    return false;
+  }
+
+  return Boolean(trimmedContent);
+}
+
 function buildSessionTitle(messages: ChatMessage[]) {
   const firstUserMessage = messages.find(message => message.role === 'user');
   const base = (firstUserMessage?.content || 'New Chat').trim();
@@ -144,6 +199,7 @@ function normalizeMessage(
     type: raw.type ?? (raw.audioUrl ? 'voice' : 'text'),
     audioUrl: raw.audioUrl,
     audioDurationMs: raw.audioDurationMs,
+    attachments: raw.attachments ?? [],
   };
 }
 
@@ -228,12 +284,17 @@ function ChatPageInner() {
   const [browserGuestSessionId, setBrowserGuestSessionId] = useState<string | null>(null);
   const [cpanelTab, setCpanelTab] = useState<(typeof CPANEL_TABS)[number]>('use_cases');
   const [searchModel, setSearchModel] = useState('');
-  const [attachments, setAttachments] = useState<string[]>([]);
+  const [attachments, setAttachments] = useState<ComposerAttachment[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [isVoiceNoteRecording, setIsVoiceNoteRecording] = useState(false);
   const [voiceDraft, setVoiceDraft] = useState<VoiceDraft | null>(null);
   const [voiceDurationMs, setVoiceDurationMs] = useState(0);
   const [showCamera, setShowCamera] = useState(false);
+  const [cameraMode, setCameraMode] = useState<CameraMode>('video');
+  const [cameraDurationMs, setCameraDurationMs] = useState(0);
+  const [isCameraRecording, setIsCameraRecording] = useState(false);
+  const [isUploadingAttachment, setIsUploadingAttachment] = useState(false);
+  const [cameraUploading, setCameraUploading] = useState(false);
   const [mockIdx, setMockIdx] = useState(0);
   const [guestBannerDismissed, setGuestBannerDismissed] = useState(false);
   const [ttsActive, setTtsActive] = useState(false);
@@ -250,6 +311,12 @@ function ChatPageInner() {
   const voiceTimerRef = useRef<number | null>(null);
   const voiceStartedAtRef = useRef<number | null>(null);
   const discardVoiceDraftRef = useRef(false);
+  const cameraRecorderRef = useRef<MediaRecorder | null>(null);
+  const cameraStreamRef = useRef<MediaStream | null>(null);
+  const cameraChunksRef = useRef<Blob[]>([]);
+  const cameraTimerRef = useRef<number | null>(null);
+  const cameraStartedAtRef = useRef<number | null>(null);
+  const discardCameraDraftRef = useRef(false);
   const chatSessionsRef = useRef<ChatSession[]>([]);
   const activeSessionIdRef = useRef<string | null>(null);
 
@@ -290,6 +357,32 @@ function ChatPageInner() {
     discardVoiceDraftRef.current = false;
     setIsVoiceNoteRecording(false);
   }, [clearVoiceStream, clearVoiceTimer]);
+
+  const clearCameraTimer = useCallback(() => {
+    if (cameraTimerRef.current) {
+      window.clearInterval(cameraTimerRef.current);
+      cameraTimerRef.current = null;
+    }
+  }, []);
+
+  const clearCameraStream = useCallback(() => {
+    cameraStreamRef.current?.getTracks().forEach(track => track.stop());
+    cameraStreamRef.current = null;
+
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+  }, []);
+
+  const resetCameraRecorder = useCallback(() => {
+    clearCameraTimer();
+    cameraRecorderRef.current = null;
+    cameraChunksRef.current = [];
+    cameraStartedAtRef.current = null;
+    discardCameraDraftRef.current = false;
+    setIsCameraRecording(false);
+    setCameraDurationMs(0);
+  }, [clearCameraTimer]);
 
   const selectSession = useCallback((session: ChatSession) => {
     setActiveSessionId(session.id);
@@ -471,28 +564,51 @@ function ChatPageInner() {
         discardVoiceDraftRef.current = true;
         mediaRecorderRef.current.stop();
       }
+      if (
+        cameraRecorderRef.current?.state &&
+        cameraRecorderRef.current.state !== 'inactive'
+      ) {
+        discardCameraDraftRef.current = true;
+        cameraRecorderRef.current.stop();
+      }
       clearVoiceTimer();
       clearVoiceStream();
-      const stream = videoRef.current?.srcObject as MediaStream | null;
-      stream?.getTracks().forEach(track => track.stop());
+      clearCameraTimer();
+      clearCameraStream();
       (recognitionRef.current as { stop?: () => void } | null)?.stop?.();
     };
-  }, [clearVoiceStream, clearVoiceTimer]);
+  }, [clearCameraStream, clearCameraTimer, clearVoiceStream, clearVoiceTimer]);
 
   const submitMessage = useCallback(
-    async (text: string, draft?: VoiceDraft | null) => {
-      const trimmedText = text.trim();
-      if ((!trimmedText && !draft) || isTyping) return;
+    async (
+      text: string,
+      draft?: VoiceDraft | null,
+      messageAttachments: ComposerAttachment[] = [],
+    ) => {
+      const normalizedAttachments = messageAttachments.map(attachment => ({
+        name: attachment.name,
+        url: attachment.url,
+        mimeType: attachment.mimeType,
+        kind: attachment.kind,
+        size: attachment.size,
+      }));
+      const messageContent = getComposerPlaceholderMessage(
+        text,
+        draft,
+        normalizedAttachments,
+      );
+      if ((!messageContent && !draft && !normalizedAttachments.length) || isTyping) return;
 
       const userMessage: ChatMessage = {
         id: uuidv4(),
         role: 'user',
-        content: trimmedText || 'Voice message',
+        content: messageContent,
         timestamp: new Date().toISOString(),
         modelId: activeModelId,
         type: draft ? 'voice' : 'text',
         audioUrl: draft?.audioUrl,
         audioDurationMs: draft?.durationMs,
+        attachments: normalizedAttachments,
       };
 
       const optimisticMessages = [...messages, userMessage];
@@ -505,12 +621,13 @@ function ChatPageInner() {
 
       try {
         const response = await chatApi.send({
-          message: trimmedText || 'Voice message',
+          message: messageContent,
           modelId: activeModelId,
           sessionId: activeSessionId ?? undefined,
           type: draft ? 'voice' : 'text',
           audioUrl: draft?.audioUrl,
           audioDurationMs: draft?.durationMs,
+          attachments: normalizedAttachments,
         });
 
         const normalizedSession = response.data?.session
@@ -547,7 +664,9 @@ function ChatPageInner() {
       } catch {
         const replyText = draft
           ? 'I received your voice message. It was stored locally because chat sync is unavailable right now.'
-          : MOCK_RESPONSES[mockIdx % MOCK_RESPONSES.length];
+          : normalizedAttachments.length
+            ? 'I saved your attachment, but chat sync is unavailable right now.'
+            : MOCK_RESPONSES[mockIdx % MOCK_RESPONSES.length];
         const fallbackSessionId = activeSessionId ?? `local-${uuidv4()}`;
         const fallbackSession = createSessionSnapshot({
           sessionId: fallbackSessionId,
@@ -598,12 +717,25 @@ function ChatPageInner() {
   );
 
   const handleSendCurrentMessage = useCallback(() => {
-    if (isVoiceNoteRecording) {
+    if (isVoiceNoteRecording || isCameraRecording) {
       toast('Stop recording before sending your message.', 'info');
       return;
     }
-    void submitMessage(inputText, voiceDraft);
-  }, [inputText, isVoiceNoteRecording, submitMessage, voiceDraft]);
+    if (isUploadingAttachment || cameraUploading) {
+      toast('Wait for the attachment upload to finish before sending.', 'info');
+      return;
+    }
+    void submitMessage(inputText, voiceDraft, attachments);
+  }, [
+    attachments,
+    cameraUploading,
+    inputText,
+    isCameraRecording,
+    isUploadingAttachment,
+    isVoiceNoteRecording,
+    submitMessage,
+    voiceDraft,
+  ]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -771,6 +903,69 @@ function ChatPageInner() {
     voiceDurationMs,
   ]);
 
+  const uploadAttachmentFile = useCallback(async (file: File) => {
+    setIsUploadingAttachment(true);
+
+    try {
+      const response = await uploadApi.upload(file);
+      const upload = response.data as {
+        url?: string;
+        originalName?: string;
+        size?: number;
+        type?: string;
+      };
+      const mimeType = String(upload.type ?? file.type ?? 'application/octet-stream');
+      const url = String(upload.url ?? '');
+
+      if (!url) {
+        throw new Error('Upload response was missing a file URL');
+      }
+
+      setAttachments(previous => [
+        ...previous,
+        {
+          id: uuidv4(),
+          name: String(upload.originalName ?? file.name),
+          url,
+          mimeType,
+          kind: getAttachmentKind(mimeType),
+          size: typeof upload.size === 'number' ? upload.size : file.size,
+        },
+      ]);
+    } catch (error) {
+      toast(`Could not upload ${file.name}.`, 'error');
+      throw error;
+    } finally {
+      setIsUploadingAttachment(false);
+    }
+  }, []);
+
+  const removeAttachment = useCallback((attachmentId: string) => {
+    setAttachments(previous =>
+      previous.filter(attachment => attachment.id !== attachmentId),
+    );
+  }, []);
+
+  const closeCameraModal = useCallback(
+    (discard = true) => {
+      discardCameraDraftRef.current = discard;
+
+      if (
+        cameraRecorderRef.current?.state &&
+        cameraRecorderRef.current.state !== 'inactive'
+      ) {
+        cameraRecorderRef.current.stop();
+        return;
+      }
+
+      resetCameraRecorder();
+      clearCameraStream();
+      setCameraUploading(false);
+      setShowCamera(false);
+    },
+    [clearCameraStream, resetCameraRecorder],
+  );
+
   const handleTTS = (text: string) => {
     if (!window.speechSynthesis) return;
     if (ttsActive) {
@@ -784,36 +979,222 @@ function ChatPageInner() {
     setTtsActive(true);
   };
 
-  const handleCamera = async () => {
-    setShowCamera(true);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      if (videoRef.current) videoRef.current.srcObject = stream;
-    } catch {
-      setShowCamera(false);
+  const startCameraStream = useCallback(async (nextMode: CameraMode) => {
+    if (typeof window === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+      toast('Camera capture is not supported in this browser.', 'error');
+      return false;
     }
-  };
 
-  const snapPhoto = () => {
+    if (isCameraRecording) {
+      toast('Stop the current recording before switching modes.', 'info');
+      return false;
+    }
+
+    clearCameraStream();
+    setCameraMode(nextMode);
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: nextMode === 'video',
+      });
+      cameraStreamRef.current = stream;
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play().catch(() => undefined);
+      }
+
+      return true;
+    } catch {
+      toast(
+        nextMode === 'video'
+          ? 'Camera and microphone access are required to record video.'
+          : 'Camera access is required to take a photo.',
+        'error',
+      );
+      setShowCamera(false);
+      return false;
+    }
+  }, [clearCameraStream, isCameraRecording]);
+
+  const handleCamera = useCallback(() => {
+    setShowCamera(true);
+    void startCameraStream('video');
+  }, [startCameraStream]);
+
+  const snapPhoto = useCallback(async () => {
     if (!videoRef.current) return;
+
     const canvas = document.createElement('canvas');
     canvas.width = videoRef.current.videoWidth;
     canvas.height = videoRef.current.videoHeight;
     canvas.getContext('2d')?.drawImage(videoRef.current, 0, 0);
-    const dataUrl = canvas.toDataURL('image/jpeg');
-    setAttachments(previous => [...previous, dataUrl]);
-    const stream = videoRef.current.srcObject as MediaStream;
-    stream?.getTracks().forEach(track => track.stop());
-    setShowCamera(false);
-  };
+    const blob = await new Promise<Blob | null>(resolve =>
+      canvas.toBlob(resolve, 'image/jpeg', 0.92),
+    );
+
+    if (!blob) {
+      toast('Could not capture the photo. Please try again.', 'error');
+      return;
+    }
+
+    setCameraUploading(true);
+
+    try {
+      const file = new File([blob], `camera-photo-${Date.now()}.jpg`, {
+        type: 'image/jpeg',
+      });
+      await uploadAttachmentFile(file);
+      closeCameraModal();
+    } catch {
+      // Upload errors are surfaced by uploadAttachmentFile.
+    } finally {
+      setCameraUploading(false);
+    }
+  }, [closeCameraModal, uploadAttachmentFile]);
+
+  const stopCameraRecording = useCallback(
+    (discard = false) => {
+      const recorder = cameraRecorderRef.current;
+      discardCameraDraftRef.current = discard;
+      clearCameraTimer();
+      setIsCameraRecording(false);
+
+      if (recorder && recorder.state !== 'inactive') {
+        recorder.stop();
+        return;
+      }
+
+      if (discard) {
+        closeCameraModal(true);
+      } else {
+        resetCameraRecorder();
+      }
+    },
+    [clearCameraTimer, closeCameraModal, resetCameraRecorder],
+  );
+
+  const startCameraRecording = useCallback(async () => {
+    if (cameraUploading || isUploadingAttachment) {
+      toast('Wait for the current upload to finish first.', 'info');
+      return;
+    }
+
+    if (cameraMode !== 'video') {
+      const switched = await startCameraStream('video');
+      if (!switched) return;
+    }
+
+    const existingStream = cameraStreamRef.current;
+    if (!existingStream) {
+      const started = await startCameraStream('video');
+      if (!started || !cameraStreamRef.current) return;
+    }
+
+    if (typeof MediaRecorder === 'undefined') {
+      toast('Video recording is not supported in this browser.', 'error');
+      return;
+    }
+
+    const stream = cameraStreamRef.current;
+    if (!stream) return;
+
+    cameraChunksRef.current = [];
+    cameraStartedAtRef.current = Date.now();
+    discardCameraDraftRef.current = false;
+
+    const preferredMimeType = [
+      'video/webm;codecs=vp9,opus',
+      'video/webm;codecs=vp8,opus',
+      'video/webm',
+      'video/mp4',
+    ].find(type => MediaRecorder.isTypeSupported(type));
+
+    const recorder = preferredMimeType
+      ? new MediaRecorder(stream, { mimeType: preferredMimeType })
+      : new MediaRecorder(stream);
+
+    cameraRecorderRef.current = recorder;
+    recorder.ondataavailable = event => {
+      if (event.data.size > 0) cameraChunksRef.current.push(event.data);
+    };
+
+    recorder.onstop = async () => {
+      const durationMs = cameraStartedAtRef.current
+        ? Date.now() - cameraStartedAtRef.current
+        : cameraDurationMs;
+      const shouldDiscard = discardCameraDraftRef.current;
+      const chunks = [...cameraChunksRef.current];
+
+      resetCameraRecorder();
+
+      if (shouldDiscard) {
+        closeCameraModal(true);
+        return;
+      }
+
+      if (!chunks.length) {
+        toast('No video was captured. Try again.', 'error');
+        closeCameraModal(true);
+        return;
+      }
+
+      const blob = new Blob(chunks, {
+        type: recorder.mimeType || 'video/webm',
+      });
+      const extension = blob.type.includes('mp4') ? 'mp4' : 'webm';
+      const file = new File(
+        [blob],
+        `camera-clip-${Date.now()}-${durationMs}.${extension}`,
+        { type: blob.type || 'video/webm' },
+      );
+
+      setCameraUploading(true);
+      try {
+        await uploadAttachmentFile(file);
+        closeCameraModal(false);
+      } catch {
+        closeCameraModal(true);
+      } finally {
+        setCameraUploading(false);
+      }
+    };
+
+    recorder.start();
+    setIsCameraRecording(true);
+    cameraTimerRef.current = window.setInterval(() => {
+      if (!cameraStartedAtRef.current) return;
+
+      const elapsed = Date.now() - cameraStartedAtRef.current;
+      setCameraDurationMs(elapsed);
+
+      if (elapsed >= CAMERA_VIDEO_MAX_MS) {
+        toast('Video clips are limited to 30 seconds.', 'info');
+        stopCameraRecording(false);
+      }
+    }, 200);
+  }, [
+    cameraDurationMs,
+    cameraMode,
+    cameraUploading,
+    closeCameraModal,
+    isUploadingAttachment,
+    resetCameraRecorder,
+    startCameraStream,
+    stopCameraRecording,
+    uploadAttachmentFile,
+  ]);
 
   const handleNewChat = () => {
     if (isVoiceNoteRecording) stopVoiceNoteRecording(true);
+    if (isCameraRecording) stopCameraRecording(true);
     setMessages([]);
     setInputText('');
     setAttachments([]);
     setVoiceDraft(null);
     setVoiceDurationMs(0);
+    closeCameraModal(true);
     setActiveSessionId(null);
     setIsTyping(false);
 
@@ -1113,8 +1494,8 @@ function ChatPageInner() {
                             style={{
                               padding: '0.6rem 0.7rem',
                               marginBottom:
-                                message.content.trim() &&
-                                message.content !== 'Voice message'
+                                shouldRenderMessageText(message) ||
+                                (message.attachments?.length ?? 0) > 0
                                   ? '0.7rem'
                                   : 0,
                               background:
@@ -1152,8 +1533,129 @@ function ChatPageInner() {
                             />
                           </div>
                         )}
-                        {(message.type !== 'voice' ||
-                          message.content.trim() !== 'Voice message') &&
+                        {(message.attachments?.length ?? 0) > 0 && (
+                          <div
+                            style={{
+                              display: 'grid',
+                              gap: 10,
+                              marginBottom: shouldRenderMessageText(message) ? '0.7rem' : 0,
+                            }}
+                          >
+                            {message.attachments?.map((attachment, index) => {
+                              const mediaUrl = resolveBackendUrl(attachment.url);
+                              const attachmentKey = `${attachment.url}-${index}`;
+                              const frameStyle = {
+                                padding: '0.6rem 0.7rem',
+                                background:
+                                  message.role === 'user'
+                                    ? 'rgba(255,255,255,0.14)'
+                                    : 'var(--bg)',
+                                borderRadius: 14,
+                                border:
+                                  message.role === 'user'
+                                    ? '1px solid rgba(255,255,255,0.16)'
+                                    : '1px solid var(--border)',
+                              } as const;
+
+                              if (attachment.kind === 'image') {
+                                return (
+                                  <div key={attachmentKey} style={frameStyle}>
+                                    <div
+                                      style={{
+                                        fontSize: '0.72rem',
+                                        fontWeight: 600,
+                                        marginBottom: 6,
+                                        color:
+                                          message.role === 'user'
+                                            ? 'rgba(255,255,255,0.84)'
+                                            : 'var(--text2)',
+                                      }}
+                                    >
+                                      Photo attachment
+                                    </div>
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img
+                                      alt={attachment.name}
+                                      src={mediaUrl}
+                                      style={{
+                                        width: '100%',
+                                        maxWidth: 320,
+                                        borderRadius: 12,
+                                        display: 'block',
+                                      }}
+                                    />
+                                  </div>
+                                );
+                              }
+
+                              if (attachment.kind === 'video') {
+                                return (
+                                  <div key={attachmentKey} style={frameStyle}>
+                                    <div
+                                      style={{
+                                        fontSize: '0.72rem',
+                                        fontWeight: 600,
+                                        marginBottom: 6,
+                                        color:
+                                          message.role === 'user'
+                                            ? 'rgba(255,255,255,0.84)'
+                                            : 'var(--text2)',
+                                      }}
+                                    >
+                                      Video attachment
+                                    </div>
+                                    <video
+                                      controls
+                                      preload="metadata"
+                                      src={mediaUrl}
+                                      style={{
+                                        width: '100%',
+                                        minWidth: 220,
+                                        maxWidth: 320,
+                                        borderRadius: 12,
+                                      }}
+                                    />
+                                  </div>
+                                );
+                              }
+
+                              return (
+                                <div key={attachmentKey} style={frameStyle}>
+                                  <div
+                                    style={{
+                                      fontSize: '0.72rem',
+                                      fontWeight: 600,
+                                      marginBottom: 6,
+                                      color:
+                                        message.role === 'user'
+                                          ? 'rgba(255,255,255,0.84)'
+                                          : 'var(--text2)',
+                                    }}
+                                  >
+                                    File attachment
+                                  </div>
+                                  <a
+                                    href={mediaUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    style={{
+                                      color:
+                                        message.role === 'user'
+                                          ? 'white'
+                                          : 'var(--accent)',
+                                      textDecoration: 'underline',
+                                      fontWeight: 600,
+                                      fontSize: '0.8rem',
+                                    }}
+                                  >
+                                    {attachment.name}
+                                  </a>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                        {shouldRenderMessageText(message) &&
                           renderMarkdown(message.content)}
                       </div>
                       {message.role === 'assistant' && (
@@ -1415,9 +1917,9 @@ function ChatPageInner() {
 
             {attachments.length > 0 && (
               <div style={{ display: 'flex', gap: 6, padding: '0 1rem 0.5rem', flexWrap: 'wrap' }}>
-                {attachments.map((attachment, index) => (
+                {attachments.map(attachment => (
                   <div
-                    key={index}
+                    key={attachment.id}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -1430,13 +1932,13 @@ function ChatPageInner() {
                       color: 'var(--accent)',
                     }}
                   >
-                    {attachment.startsWith('data:image') ? 'Photo' : attachment}
+                    {attachment.kind === 'image'
+                      ? `Photo: ${attachment.name}`
+                      : attachment.kind === 'video'
+                        ? `Video: ${attachment.name}`
+                        : attachment.name}
                     <button
-                      onClick={() =>
-                        setAttachments(previous =>
-                          previous.filter((_, attachmentIndex) => attachmentIndex !== index),
-                        )
-                      }
+                      onClick={() => removeAttachment(attachment.id)}
                       style={{
                         background: 'none',
                         border: 'none',
@@ -1449,6 +1951,23 @@ function ChatPageInner() {
                     </button>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {(isUploadingAttachment || cameraUploading) && (
+              <div style={{ padding: '0 1rem 0.6rem' }}>
+                <div
+                  style={{
+                    padding: '0.7rem 0.85rem',
+                    background: 'var(--bg)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 12,
+                    fontSize: '0.78rem',
+                    color: 'var(--text2)',
+                  }}
+                >
+                  Uploading attachment...
+                </div>
               </div>
             )}
 
@@ -1485,6 +2004,7 @@ function ChatPageInner() {
                 <div style={{ display: 'flex', gap: 5 }}>
                   <button
                     onClick={handleVoiceTyping}
+                    aria-label="Voice typing"
                     title="Voice typing"
                     style={{
                       width: 34,
@@ -1500,7 +2020,7 @@ function ChatPageInner() {
                       animation: isRecording ? 'micPulse 1s infinite' : 'none',
                     }}
                   >
-                    Mic
+                    <Mic size={16} strokeWidth={2.1} />
                   </button>
                   <button
                     onClick={() =>
@@ -1508,6 +2028,7 @@ function ChatPageInner() {
                         ? stopVoiceNoteRecording(false)
                         : void startVoiceNoteRecording()
                     }
+                    aria-label={isVoiceNoteRecording ? 'Stop voice note' : 'Record voice note'}
                     title={isVoiceNoteRecording ? 'Stop voice note' : 'Record voice note'}
                     style={{
                       width: 34,
@@ -1523,10 +2044,15 @@ function ChatPageInner() {
                       color: isVoiceNoteRecording ? '#b91c1c' : 'var(--text2)',
                     }}
                   >
-                    {isVoiceNoteRecording ? 'Stop' : 'Rec'}
+                    {isVoiceNoteRecording ? (
+                      <Square size={15} fill="currentColor" strokeWidth={2.1} />
+                    ) : (
+                      <Circle size={16} strokeWidth={2.1} />
+                    )}
                   </button>
                   <button
                     onClick={() => fileInputRef.current?.click()}
+                    aria-label="Attach file"
                     title="Attach file"
                     style={{
                       width: 34,
@@ -1541,10 +2067,11 @@ function ChatPageInner() {
                       justifyContent: 'center',
                     }}
                   >
-                    File
+                    <FileUp size={16} strokeWidth={2.1} />
                   </button>
                   <button
                     onClick={() => imgInputRef.current?.click()}
+                    aria-label="Attach image"
                     title="Attach image"
                     style={{
                       width: 34,
@@ -1559,11 +2086,12 @@ function ChatPageInner() {
                       justifyContent: 'center',
                     }}
                   >
-                    Img
+                    <ImagePlus size={16} strokeWidth={2.1} />
                   </button>
                   <button
                     onClick={handleCamera}
-                    title="Camera"
+                    aria-label="Camera / video"
+                    title="Camera / video"
                     style={{
                       width: 34,
                       height: 34,
@@ -1577,12 +2105,18 @@ function ChatPageInner() {
                       justifyContent: 'center',
                     }}
                   >
-                    Cam
+                    <Camera size={16} strokeWidth={2.1} />
                   </button>
                 </div>
                 <button
                   onClick={handleSendCurrentMessage}
-                  disabled={isVoiceNoteRecording || (!inputText.trim() && !attachments.length && !voiceDraft)}
+                  disabled={
+                    isVoiceNoteRecording ||
+                    isCameraRecording ||
+                    isUploadingAttachment ||
+                    cameraUploading ||
+                    (!inputText.trim() && !attachments.length && !voiceDraft)
+                  }
                   style={{
                     padding: '0.5rem 1rem',
                     background: 'var(--accent)',
@@ -1595,6 +2129,9 @@ function ChatPageInner() {
                     fontFamily: 'inherit',
                     opacity:
                       isVoiceNoteRecording ||
+                      isCameraRecording ||
+                      isUploadingAttachment ||
+                      cameraUploading ||
                       (!inputText.trim() && !attachments.length && !voiceDraft)
                         ? 0.5
                         : 1,
@@ -1610,8 +2147,9 @@ function ChatPageInner() {
               style={{ display: 'none' }}
               onChange={e => {
                 if (e.target.files?.[0]) {
-                  setAttachments(previous => [...previous, e.target.files![0].name]);
+                  void uploadAttachmentFile(e.target.files[0]);
                 }
+                e.target.value = '';
               }}
             />
             <input
@@ -1621,14 +2159,9 @@ function ChatPageInner() {
               style={{ display: 'none' }}
               onChange={e => {
                 if (e.target.files?.[0]) {
-                  const reader = new FileReader();
-                  reader.onload = event =>
-                    setAttachments(previous => [
-                      ...previous,
-                      String(event.target?.result ?? ''),
-                    ]);
-                  reader.readAsDataURL(e.target.files[0]);
+                  void uploadAttachmentFile(e.target.files[0]);
                 }
+                e.target.value = '';
               }}
             />
           </div>
@@ -2044,40 +2577,179 @@ function ChatPageInner() {
                 marginBottom: '1rem',
               }}
             >
-              Take a photo
+              Camera capture
             </h3>
+            <div
+              style={{
+                display: 'flex',
+                gap: 8,
+                marginBottom: '1rem',
+              }}
+            >
+              {(['photo', 'video'] as CameraMode[]).map(mode => (
+                <button
+                  key={mode}
+                  onClick={() => {
+                    if (mode !== cameraMode) {
+                      void startCameraStream(mode);
+                    }
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '0.5rem 0.75rem',
+                    borderRadius: 999,
+                    border:
+                      cameraMode === mode
+                        ? '1px solid var(--accent-border)'
+                        : '1px solid var(--border)',
+                    background:
+                      cameraMode === mode ? 'var(--accent-lt)' : 'var(--bg)',
+                    color: cameraMode === mode ? 'var(--accent)' : 'var(--text2)',
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                    fontWeight: 600,
+                    fontSize: '0.78rem',
+                  }}
+                >
+                  {mode === 'photo' ? 'Photo' : 'Video'}
+                </button>
+              ))}
+            </div>
             <video
               ref={videoRef}
               autoPlay
+              muted
+              playsInline
               style={{
                 width: '100%',
                 borderRadius: 'var(--radius)',
                 marginBottom: '1rem',
+                background: '#0f172a',
               }}
             />
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button
-                onClick={snapPhoto}
+            {cameraMode === 'video' && (
+              <div
                 style={{
-                  flex: 1,
-                  padding: '0.6rem',
-                  background: 'var(--accent)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: 8,
-                  cursor: 'pointer',
-                  fontFamily: 'inherit',
-                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 10,
+                  marginBottom: '1rem',
+                  padding: '0.65rem 0.8rem',
+                  borderRadius: 12,
+                  background: isCameraRecording ? '#fff2f2' : 'var(--bg)',
+                  border:
+                    isCameraRecording
+                      ? '1px solid rgba(220, 38, 38, 0.18)'
+                      : '1px solid var(--border)',
                 }}
               >
-                Snap
-              </button>
-              <button
-                onClick={() => {
-                  const stream = videoRef.current?.srcObject as MediaStream;
-                  stream?.getTracks().forEach(track => track.stop());
-                  setShowCamera(false);
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span
+                    style={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: '50%',
+                      background: isCameraRecording ? '#dc2626' : 'var(--text3)',
+                      display: 'inline-block',
+                      animation: isCameraRecording ? 'pulse 1.3s infinite' : 'none',
+                    }}
+                  />
+                  <div>
+                    <div
+                      style={{
+                        fontSize: '0.78rem',
+                        fontWeight: 700,
+                        color: 'var(--text)',
+                      }}
+                    >
+                      {isCameraRecording ? 'Recording clip' : 'Ready to record'}
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text3)' }}>
+                      {formatDuration(cameraDurationMs)} / 0:30 max
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() =>
+                    isCameraRecording
+                      ? stopCameraRecording(false)
+                      : void startCameraRecording()
+                  }
+                  disabled={cameraUploading}
+                  style={{
+                    padding: '0.42rem 0.8rem',
+                    background: isCameraRecording ? '#dc2626' : 'var(--accent)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: 8,
+                    cursor: cameraUploading ? 'not-allowed' : 'pointer',
+                    fontFamily: 'inherit',
+                    fontWeight: 600,
+                    opacity: cameraUploading ? 0.6 : 1,
+                  }}
+                >
+                  {isCameraRecording ? 'Stop' : 'Record'}
+                </button>
+              </div>
+            )}
+            {cameraUploading && (
+              <div
+                style={{
+                  marginBottom: '1rem',
+                  padding: '0.65rem 0.8rem',
+                  background: 'var(--bg)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 12,
+                  fontSize: '0.76rem',
+                  color: 'var(--text2)',
                 }}
+              >
+                Uploading camera attachment...
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: 8 }}>
+              {cameraMode === 'photo' ? (
+                <button
+                  onClick={() => void snapPhoto()}
+                  disabled={cameraUploading}
+                  style={{
+                    flex: 1,
+                    padding: '0.6rem',
+                    background: 'var(--accent)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: 8,
+                    cursor: cameraUploading ? 'not-allowed' : 'pointer',
+                    fontFamily: 'inherit',
+                    fontWeight: 600,
+                    opacity: cameraUploading ? 0.6 : 1,
+                  }}
+                >
+                  Snap
+                </button>
+              ) : (
+                <button
+                  onClick={() => stopCameraRecording(true)}
+                  disabled={!isCameraRecording && !cameraUploading}
+                  style={{
+                    flex: 1,
+                    padding: '0.6rem',
+                    background: 'var(--white)',
+                    border: '1px solid rgba(220, 38, 38, 0.15)',
+                    borderRadius: 8,
+                    cursor:
+                      !isCameraRecording && !cameraUploading ? 'not-allowed' : 'pointer',
+                    fontFamily: 'inherit',
+                    color: '#991b1b',
+                    opacity: !isCameraRecording && !cameraUploading ? 0.5 : 1,
+                  }}
+                >
+                  Discard
+                </button>
+              )}
+              <button
+                onClick={() => closeCameraModal(true)}
                 style={{
                   flex: 1,
                   padding: '0.6rem',
@@ -2088,7 +2760,7 @@ function ChatPageInner() {
                   fontFamily: 'inherit',
                 }}
               >
-                Cancel
+                {cameraMode === 'photo' ? 'Cancel' : 'Close'}
               </button>
             </div>
           </div>

@@ -17,6 +17,10 @@ export class UsersService {
     return this.userModel.findById(id).exec();
   }
 
+  async findByIdWithRefreshToken(id: string): Promise<UserDocument | null> {
+    return this.userModel.findById(id).select('+refreshTokenHash').exec();
+  }
+
   async create(data: {
     email: string;
     name: string;
@@ -34,6 +38,10 @@ export class UsersService {
 
   async update(id: string, data: Partial<User>): Promise<UserDocument | null> {
     return this.userModel.findByIdAndUpdate(id, data, { new: true }).exec();
+  }
+
+  async setRefreshTokenHash(id: string, refreshTokenHash: string | null) {
+    await this.userModel.findByIdAndUpdate(id, { refreshTokenHash }).exec();
   }
 
   sanitize(user: UserDocument): { id: string; email: string; name: string; role: string } {

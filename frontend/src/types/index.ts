@@ -28,6 +28,7 @@ export interface ChatMessage {
   type?: 'text' | 'voice';
   audioUrl?: string;
   audioDurationMs?: number;
+  attachments?: MessageAttachment[];
 }
 
 export interface ChatSession {
@@ -39,6 +40,14 @@ export interface ChatSession {
   updatedAt?: string;
   expiresAt?: string;
   isGuest: boolean;
+}
+
+export interface MessageAttachment {
+  name: string;
+  url: string;
+  mimeType: string;
+  kind: 'image' | 'video' | 'file';
+  size?: number;
 }
 
 export interface User {

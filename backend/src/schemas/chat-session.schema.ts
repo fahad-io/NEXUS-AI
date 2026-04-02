@@ -4,6 +4,26 @@ import { Document, Types } from 'mongoose';
 export type ChatSessionDocument = ChatSession & Document;
 
 @Schema({ _id: false })
+export class MessageAttachment {
+  @Prop({ required: true })
+  name: string;
+
+  @Prop({ required: true })
+  url: string;
+
+  @Prop({ required: true })
+  mimeType: string;
+
+  @Prop({ enum: ['image', 'video', 'file'], required: true })
+  kind: 'image' | 'video' | 'file';
+
+  @Prop()
+  size?: number;
+}
+
+const MessageAttachmentSchema = SchemaFactory.createForClass(MessageAttachment);
+
+@Schema({ _id: false })
 export class ChatMessage {
   @Prop({ enum: ['user', 'assistant'], required: true })
   role: 'user' | 'assistant';
@@ -19,6 +39,12 @@ export class ChatMessage {
 
   @Prop()
   audioDurationMs?: number;
+
+  @Prop({
+    type: [MessageAttachmentSchema],
+    default: [],
+  })
+  attachments?: MessageAttachment[];
 
   @Prop({ default: () => new Date() })
   timestamp: Date;

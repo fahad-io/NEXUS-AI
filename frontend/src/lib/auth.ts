@@ -6,10 +6,19 @@ const GUEST_SESSION_DURATION = 3 * 60 * 60 * 1000;
 const GUEST_SESSION_CACHE_KEY = 'nexusai_guest_session';
 const LEGACY_GUEST_ID_KEY = 'nexusai_session_id';
 const LEGACY_GUEST_EXPIRY_KEY = 'nexusai_session_expiry';
+const AUTH_TOKEN_KEY = 'nexusai_token';
+const AUTH_USER_KEY = 'nexusai_user';
+const AUTH_SESSION_HINT_KEY = 'nexusai_auth_session_hint';
+const AUTH_CHANGE_EVENT = 'nexusai:auth-change';
 
 interface GuestSessionCache {
   id: string;
   expiresAt: number;
+}
+
+function emitAuthChange() {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new Event(AUTH_CHANGE_EVENT));
 }
 
 function readGuestSession(): GuestSessionCache | null {
@@ -43,13 +52,23 @@ export function getGuestSessionId(): string | null {
   return readGuestSession()?.id ?? null;
 }
 
+export function getStoredAuthToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  return window.localStorage.getItem(AUTH_TOKEN_KEY);
+}
+
+export function hasStoredAuthSessionHint(): boolean {
+  if (typeof window === 'undefined') return false;
+  return window.localStorage.getItem(AUTH_SESSION_HINT_KEY) === 'true';
+}
+
 export function getAuthState(): AuthState {
   if (typeof window === 'undefined') {
     return { user: null, token: null, isAuthenticated: false, isGuest: false, sessionId: null, sessionExpiry: null };
   }
 
-  const token = localStorage.getItem('nexusai_token');
-  const userStr = localStorage.getItem('nexusai_user');
+  const token = window.localStorage.getItem(AUTH_TOKEN_KEY);
+  const userStr = window.localStorage.getItem(AUTH_USER_KEY);
   const guestSession = readGuestSession();
 
   if (token && userStr) {
@@ -64,8 +83,8 @@ export function getAuthState(): AuthState {
         sessionExpiry: null,
       };
     } catch {
-      localStorage.removeItem('nexusai_user');
-      localStorage.removeItem('nexusai_token');
+      window.localStorage.removeItem(AUTH_USER_KEY);
+      window.localStorage.removeItem(AUTH_TOKEN_KEY);
     }
   }
 
@@ -103,15 +122,32 @@ export function clearGuestSession() {
 
 export function setAuthToken(token: string, user: User) {
   if (typeof window === 'undefined') return;
-  localStorage.setItem('nexusai_token', token);
-  localStorage.setItem('nexusai_user', JSON.stringify(user));
+  window.localStorage.setItem(AUTH_TOKEN_KEY, token);
+  window.localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+  window.localStorage.setItem(AUTH_SESSION_HINT_KEY, 'true');
   clearGuestSession();
+  emitAuthChange();
 }
 
 export function clearAuth() {
   if (typeof window === 'undefined') return;
-  localStorage.removeItem('nexusai_token');
-  localStorage.removeItem('nexusai_user');
+  window.localStorage.removeItem(AUTH_TOKEN_KEY);
+  window.localStorage.removeItem(AUTH_USER_KEY);
+  window.localStorage.removeItem(AUTH_SESSION_HINT_KEY);
+  emitAuthChange();
+}
+
+export function subscribeToAuthChanges(callback: () => void) {
+  if (typeof window === 'undefined') return () => undefined;
+
+  const handleChange = () => callback();
+  window.addEventListener(AUTH_CHANGE_EVENT, handleChange);
+  window.addEventListener('storage', handleChange);
+
+  return () => {
+    window.removeEventListener(AUTH_CHANGE_EVENT, handleChange);
+    window.removeEventListener('storage', handleChange);
+  };
 }
 
 export function getGuestTimeRemaining(expiry: number): string {

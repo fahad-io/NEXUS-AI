@@ -22,7 +22,7 @@ Runs on **http://localhost:3000** (set via package.json `dev` script — update 
 
 | Variable | Description | Default |
 |---|---|---|
-| `NEXT_PUBLIC_API_URL` | Backend API base URL | `http://localhost:8000/` |
+| `NEXT_PUBLIC_API_URL` | Backend API base URL | `http://localhost:8080/` |
 
 ## Routes
 
