@@ -1,0 +1,30 @@
+# Backend Claude Guide
+
+- Scope:
+  - Backend-only guidance for APIs, auth, sessions, chat contracts, and integrations.
+  - Works inside `backend/` and follows root shared rules.
+- Read first:
+  - `../../.claude/rules/global-rules.md`
+  - `../../.claude/rules/backend-rules.md`
+  - `../../.claude/rules/security-rules.md`
+  - `../../.claude/rules/communication-rules.md`
+  - `../../.claude/specs/auth-spec.md`
+  - `../../.claude/specs/guest-session-spec.md`
+- Local references:
+  - `agents/backend-agent.md`
+  - `prompts/backend-context.txt`
+  - `skills/auth-skill.md`
+  - `skills/guest-session-skill.md`
+  - `skills/ai-integration-skill.md`
+- Owns:
+  - Auth endpoints and route protection.
+  - Guest-session expiry and migration.
+  - Model metadata and chat contracts.
+  - Usage and integration data for frontend panels.
+- Communication:
+  - Report endpoint shapes, validation rules, and blockers to frontend.
+  - Use the shared handoff format from root communication rules.
+- Non-negotiables:
+  - Keep JSON contracts stable.
+  - Do not expose secrets.
+  - Do not return placeholder provider responses.

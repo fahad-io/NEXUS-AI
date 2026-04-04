@@ -1,0 +1,102 @@
+# NEXUS-AI QA Coverage Map
+
+## UI Map
+- `/`
+  - Sticky navbar with brand, main nav, language selector, auth CTAs
+  - Hero search input that routes to `/chat`
+  - Action chips routing to `/chat` or `/discover`
+  - Featured model cards
+  - Newsletter email form with regex validation and toast feedback
+  - Footer links and informational toast buttons
+- `/auth/login`
+  - Email input
+  - Password input
+  - Remember me checkbox
+  - Sign in submit
+  - Continue as Guest
+  - Link to signup
+- `/auth/signup`
+  - Full Name input
+  - Email input
+  - Password input with client-side min length check
+  - Sign up submit
+  - Link to login
+- `/chat`
+  - Guest banner with remaining time and dismiss action
+  - Left sidebar model search and model list
+  - Center conversation area with recent messages
+  - Composer textarea
+  - File, image, camera, mic, and voice-note flows
+  - Session creation/loading/caching
+  - Right panel with active model, recent chats, usage overview, quick actions
+  - Camera modal with photo/video mode and video duration cap
+- `/marketplace`
+  - Search
+  - Type chips
+  - Lab chips
+  - Sidebar filters: provider, pricing, min rating, license
+  - Model cards
+  - Model detail dialog with tabs:
+    - Overview
+    - How to Use
+    - Pricing
+    - Prompt Guide
+    - Agent Creation
+    - Reviews
+- `/discover`
+  - Static research feed cards
+  - Read more links
+  - Load more button
+- `/agents`
+  - New Agent CTA
+  - Dismissible guide banner
+  - Agent template cards
+  - Empty "My Agents" state
+- `/dashboard`
+  - Protected route
+  - Sidebar nav
+  - Stats cards
+  - Line, bar, and donut charts
+  - Quick start links
+- `/dashboard/history`
+  - Protected route
+  - Session list
+  - Continue link to `/chat?session=...`
+  - Delete button
+- `/dashboard/settings`
+  - Protected route
+  - Profile form
+  - Preferences select/toggle
+  - Danger zone delete account action
+- `/dashboard/billing`
+  - Protected route
+  - Current plan summary
+  - Upgrade plan cards
+  - Invoice history
+
+## API Map
+- `POST /api/auth/signup`
+- `POST /api/auth/login`
+- `GET /api/auth/me`
+- `POST /api/auth/refresh`
+- `POST /api/auth/logout`
+- `GET /api/models`
+- `GET /api/models/:id`
+- `POST /api/chat/send`
+- `POST /api/chat/session`
+- `GET /api/chat/session/:id`
+- `DELETE /api/chat/session/:id`
+- `GET /api/chat/history`
+- `GET /api/dashboard/stats`
+- `GET /api/dashboard/history`
+- `GET /api/dashboard/billing`
+- `POST /api/forms/contact`
+- `POST /api/forms/feedback`
+- `POST /api/upload`
+
+## Skills And Rules Description
+- Skill file: `.claude/skills/qa-test-case-generation-skill.md`
+  - Defines how to inspect the repo, map UI to APIs, and write executable FE/BE cases.
+- Rules file: `.claude/rules/qa-test-case-generation-rules.md`
+  - Enforces repo-specific, non-generic, code-backed QA coverage.
+

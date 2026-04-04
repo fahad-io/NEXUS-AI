@@ -1,0 +1,37 @@
+{
+  "name": "bug-reporting-agent",
+  "version": "1.0.0",
+  "description": "Senior QA Automation Agent for Bug Reporting - Reads executed test case Excel files, detects failed test cases, and generates comprehensive bug reports",
+  "main": "bug-reporting-agent.js",
+  "scripts": {
+    "start": "node bug-reporting-agent.js",
+    "generate-report": "node bug-reporting-agent.js --test-cases-folder ./excel-test-cases/ --output ./Bug_Report.xlsx",
+    "update-bug": "node bug-reporting-agent.js --action update-status",
+    "help": "node bug-reporting-agent.js --help"
+  },
+  "keywords": [
+    "qa",
+    "automation",
+    "bug-reporting",
+    "testing",
+    "excel",
+    "test-execution"
+  ],
+  "author": "QA Automation Team",
+  "license": "MIT",
+  "dependencies": {
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/bug-reporting-agent.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-org/bug-reporting-agent/issues"
+  },
+  "homepage": "https://github.com/your-org/bug-reporting-agent#readme"
+}

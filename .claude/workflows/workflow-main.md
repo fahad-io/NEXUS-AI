@@ -1,0 +1,22 @@
+# Main Workflow
+
+- Step 1: FE + BE parallel build
+  - Frontend builds UI shell and route structure.
+  - Backend builds auth, chat, marketplace, and session APIs.
+  - FE and BE exchange route needs, DTO needs, and data-shape needs.
+- Step 2: Integration
+  - Connect frontend views to backend contracts.
+  - Remove placeholder calls before merging.
+  - Record handoff details using the shared communication contract.
+- Step 3: QA run
+  - Validate routes, forms, filters, and auth boundaries.
+  - Send findings to FE or BE with route, severity, repro, expected, actual.
+- Step 4: Analyzer compare vs HTML behavior
+  - Compare nav, layout, sidebars, filters, cards, and chat flow.
+  - Send structural mismatches back to FE with reference notes.
+- Step 5: Fix loop
+  - Fix QA and analyzer issues.
+  - Re-run affected checks.
+  - Keep blocker and done-definition updates visible across scopes.
+- Step 6: Release checklist
+  - Confirm build, lint, tests, route coverage, and config readiness.

@@ -1,0 +1,47 @@
+# Communication Rules
+
+- Goal:
+  - Make root, frontend, and backend `.claude` docs operate as one system.
+- Canonical source order:
+  - Root `.claude/rules/`
+  - Root `.claude/specs/`
+  - Root `.claude/workflows/`
+  - App-specific `.claude/agents/`, `.claude/prompts/`, `.claude/skills/`
+- Shared contract:
+  - Every handoff must include:
+    - source
+    - target
+    - scope
+    - changed files or planned files
+    - blockers
+    - requested next action
+    - done definition
+- Frontend must communicate:
+  - required API contracts
+  - route dependencies
+  - missing backend data
+  - UI assumptions from the HTML reference
+- Backend must communicate:
+  - endpoint shapes
+  - auth requirements
+  - validation rules
+  - integration limits or provider blockers
+- QA must communicate:
+  - repro steps
+  - expected result
+  - actual result
+  - affected route or API
+  - severity
+- Analyzer must communicate:
+  - page or feature reviewed
+  - reference behavior
+  - current behavior
+  - mismatch
+  - recommended fix
+- Conflict rule:
+  - Root shared rules win over app-specific guidance.
+  - Shared specs win over local assumptions.
+- Blocker rule:
+  - Raise blockers immediately.
+  - Do not continue with hidden assumptions when they can break another layer.
+

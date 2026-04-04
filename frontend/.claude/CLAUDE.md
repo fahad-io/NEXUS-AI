@@ -1,0 +1,29 @@
+# Frontend Claude Guide
+
+- Scope:
+  - Frontend-only guidance for UI, routes, layouts, and interaction behavior.
+  - Works inside `frontend/` and follows root shared rules.
+- Read first:
+  - `../../.claude/rules/global-rules.md`
+  - `../../.claude/rules/ui-rules.md`
+  - `../../.claude/rules/communication-rules.md`
+  - `../../.claude/specs/chat-spec.md`
+  - `../../.claude/specs/marketplace-spec.md`
+- Local references:
+  - `agents/frontend-agent.md`
+  - `prompts/frontend-context.txt`
+  - `skills/layout-skill.md`
+  - `skills/chat-hub-skill.md`
+  - `skills/marketplace-ui-skill.md`
+- Owns:
+  - Navbar structure.
+  - Chat Hub layout.
+  - Marketplace filters and cards.
+  - Sign-in entry and language selector UI.
+- Communication:
+  - Report missing API contracts, auth needs, and data-shape blockers to backend.
+  - Use the shared handoff format from root communication rules.
+- Non-negotiables:
+  - Keep a modern light theme.
+  - Do not ship dead buttons or placeholder API calls.
+  - Keep Chat Hub in a 3-column desktop layout.

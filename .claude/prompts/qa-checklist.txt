@@ -1,0 +1,8 @@
+- Test home, chat, marketplace, discover, and agents routes.
+- Test login, signup, logout, and protected dashboard access.
+- Verify language selector and sign-in entry.
+- Verify chat model switching and active-model display.
+- Verify voice, file, and video entry points render.
+- Verify marketplace chips, sidebar filters, and chat CTA.
+- Verify guest-session save, expiry, and migration prompts.
+

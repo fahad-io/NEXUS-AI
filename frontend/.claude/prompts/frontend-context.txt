@@ -1,0 +1,10 @@
+- Stack target: Next.js + React + MUI-style composition.
+- Read root `.claude/rules/communication-rules.md` before cross-scope handoffs.
+- Keep a modern light theme.
+- Match navbar labels: Chat Hub, Marketplace, Discover New, Agents.
+- Include language selector and sign-in entry in the header.
+- Keep Chat Hub in a 3-column desktop layout.
+- Keep Marketplace chips and left sidebar filters.
+- Prefer reusable layout primitives over one-off pages.
+- Do not implement placeholder API calls.
+- Report missing backend contracts explicitly.
