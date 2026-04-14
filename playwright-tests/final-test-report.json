@@ -1,0 +1,613 @@
+{
+  "executionDate": "2026-04-06T10:09:18.677Z",
+  "testExecution": {
+    "totalTests": 47,
+    "passed": 3,
+    "failed": 44,
+    "passRate": "6.38%"
+  },
+  "bugReport": {
+    "existingBugs": 5,
+    "newBugsDetected": 44,
+    "totalBugs": 49
+  },
+  "failedTestCases": [
+    {
+      "testCaseId": "TC-AUTH-FE-001",
+      "description": "User successfully logs in with valid credentials",
+      "actualResult": "Failed at step 2: Cannot parse action: Enter valid email in email field",
+      "error": "Cannot parse action: Enter valid email in email field"
+    },
+    {
+      "testCaseId": "TC-AUTH-FE-002",
+      "description": "User attempts login with invalid credentials",
+      "actualResult": "Failed at step 2: Cannot parse action: Enter invalid email in email field",
+      "error": "Cannot parse action: Enter invalid email in email field"
+    },
+    {
+      "testCaseId": "TC-AUTH-FE-003",
+      "description": "User attempts login without entering email",
+      "actualResult": "Failed at step 2: locator.fill: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[name*=\"email\"], input[id*=\"email\"], [placeholder*=\"email\"]').first()\u001b[22m\n",
+      "error": "locator.fill: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[name*=\"email\"], input[id*=\"email\"], [placeholder*=\"email\"]').first()\u001b[22m\n"
+    },
+    {
+      "testCaseId": "TC-AUTH-FE-004",
+      "description": "User attempts login without entering password",
+      "actualResult": "Failed at step 2: Cannot parse action: Enter valid email in email field",
+      "error": "Cannot parse action: Enter valid email in email field"
+    },
+    {
+      "testCaseId": "TC-AUTH-FE-005",
+      "description": "User attempts login with invalid email format",
+      "actualResult": "Failed at step 2: Cannot parse action: Enter \"notanemail\" in email field",
+      "error": "Cannot parse action: Enter \"notanemail\" in email field"
+    },
+    {
+      "testCaseId": "TC-AUTH-FE-006",
+      "description": "User checks \"Remember me\" checkbox during login",
+      "actualResult": "Failed at step 2: Cannot parse action: Enter valid email and password",
+      "error": "Cannot parse action: Enter valid email and password"
+    },
+    {
+      "testCaseId": "TC-AUTH-FE-007",
+      "description": "Verify loading state is displayed during login request",
+      "actualResult": "Failed at step 2: Cannot parse action: Enter valid email and password",
+      "error": "Cannot parse action: Enter valid email and password"
+    },
+    {
+      "testCaseId": "TC-AUTH-FE-010",
+      "description": "User successfully creates a new account",
+      "actualResult": "Failed at step 2: Cannot parse action: Enter valid full name (2-100 chars)",
+      "error": "Cannot parse action: Enter valid full name (2-100 chars)"
+    },
+    {
+      "testCaseId": "TC-AUTH-FE-011",
+      "description": "User attempts signup without entering name",
+      "actualResult": "Failed at step 2: locator.fill: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[name*=\"name\"], input[id*=\"name\"], [placeholder*=\"name\"]').first()\u001b[22m\n",
+      "error": "locator.fill: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[name*=\"name\"], input[id*=\"name\"], [placeholder*=\"name\"]').first()\u001b[22m\n"
+    },
+    {
+      "testCaseId": "TC-AUTH-FE-012",
+      "description": "User attempts signup with name less than 2 characters",
+      "actualResult": "Failed at step 2: Cannot parse action: Enter \"A\" (1 character) in name field",
+      "error": "Cannot parse action: Enter \"A\" (1 character) in name field"
+    },
+    {
+      "testCaseId": "TC-AUTH-FE-013",
+      "description": "User attempts signup with name more than 100 characters",
+      "actualResult": "Failed at step 2: Cannot parse action: Enter name with 101 characters",
+      "error": "Cannot parse action: Enter name with 101 characters"
+    },
+    {
+      "testCaseId": "TC-AUTH-FE-014",
+      "description": "User attempts signup without entering email",
+      "actualResult": "Failed at step 2: Cannot parse action: Enter valid name and password",
+      "error": "Cannot parse action: Enter valid name and password"
+    },
+    {
+      "testCaseId": "TC-AUTH-FE-015",
+      "description": "User attempts signup with invalid email format",
+      "actualResult": "Failed at step 2: Cannot parse action: Enter valid name and password",
+      "error": "Cannot parse action: Enter valid name and password"
+    },
+    {
+      "testCaseId": "TC-AUTH-FE-016",
+      "description": "User attempts signup without entering password",
+      "actualResult": "Failed at step 2: Cannot parse action: Enter valid name and email",
+      "error": "Cannot parse action: Enter valid name and email"
+    },
+    {
+      "testCaseId": "TC-AUTH-FE-017",
+      "description": "User attempts signup with password less than 6 characters (boundary: 5)",
+      "actualResult": "Failed at step 2: Cannot parse action: Enter valid name and email",
+      "error": "Cannot parse action: Enter valid name and email"
+    },
+    {
+      "testCaseId": "TC-AUTH-FE-018",
+      "description": "User successfully signs up with password exactly 6 characters",
+      "actualResult": "Failed at step 2: Cannot parse action: Enter valid name and email",
+      "error": "Cannot parse action: Enter valid name and email"
+    },
+    {
+      "testCaseId": "TC-AUTH-FE-019",
+      "description": "User attempts signup with password more than 100 characters",
+      "actualResult": "Failed at step 2: Cannot parse action: Enter valid name and email",
+      "error": "Cannot parse action: Enter valid name and email"
+    },
+    {
+      "testCaseId": "TC-AUTH-FE-020",
+      "description": "Verify loading state is displayed during signup request",
+      "actualResult": "Failed at step 2: Cannot parse action: Enter valid name, email, and password",
+      "error": "Cannot parse action: Enter valid name, email, and password"
+    },
+    {
+      "testCaseId": "TC-AUTH-FE-021",
+      "description": "User attempts signup with email that already exists",
+      "actualResult": "Failed at step 2: Cannot parse action: Enter valid name",
+      "error": "Cannot parse action: Enter valid name"
+    },
+    {
+      "testCaseId": "TC-AUTH-BE-014",
+      "description": "User successfully logs in with valid credentials",
+      "actualResult": "Failed at step 2: Cannot parse action: Verify response status code",
+      "error": "Cannot parse action: Verify response status code"
+    },
+    {
+      "testCaseId": "TC-AUTH-BE-015",
+      "description": "Attempt login with non-existent email",
+      "actualResult": "Failed at step 2: Cannot parse action: Verify response status code",
+      "error": "Cannot parse action: Verify response status code"
+    },
+    {
+      "testCaseId": "TC-AUTH-BE-016",
+      "description": "Attempt login with correct email but wrong password",
+      "actualResult": "Failed at step 2: Cannot parse action: Verify response status code",
+      "error": "Cannot parse action: Verify response status code"
+    },
+    {
+      "testCaseId": "TC-AUTH-BE-017",
+      "description": "Attempt login without providing email",
+      "actualResult": "Failed at step 2: Cannot parse action: Verify response status code",
+      "error": "Cannot parse action: Verify response status code"
+    },
+    {
+      "testCaseId": "TC-AUTH-BE-018",
+      "description": "Attempt login with invalid email format",
+      "actualResult": "Failed at step 2: Cannot parse action: Verify response status code",
+      "error": "Cannot parse action: Verify response status code"
+    },
+    {
+      "testCaseId": "TC-AUTH-BE-019",
+      "description": "Attempt login without providing password",
+      "actualResult": "Failed at step 2: Cannot parse action: Verify response status code",
+      "error": "Cannot parse action: Verify response status code"
+    },
+    {
+      "testCaseId": "TC-AUTH-BE-020",
+      "description": "Attempt login with password less than 6 characters",
+      "actualResult": "Failed at step 2: Cannot parse action: Verify response status code",
+      "error": "Cannot parse action: Verify response status code"
+    },
+    {
+      "testCaseId": "TC-AUTH-BE-001",
+      "description": "Create a new user account with valid data",
+      "actualResult": "Failed at step 1: Cannot parse action: Send POST request to /api/auth/signup with body: { \"name\": \"Test User\", \"email\": \"test@example.com\", \"password\": \"password123\" }",
+      "error": "Cannot parse action: Send POST request to /api/auth/signup with body: { \"name\": \"Test User\", \"email\": \"test@example.com\", \"password\": \"password123\" }"
+    },
+    {
+      "testCaseId": "TC-AUTH-BE-002",
+      "description": "Attempt signup without providing name field",
+      "actualResult": "Failed at step 1: Cannot parse action: Send POST request to /api/auth/signup with body: { \"email\": \"test@example.com\", \"password\": \"password123\" }",
+      "error": "Cannot parse action: Send POST request to /api/auth/signup with body: { \"email\": \"test@example.com\", \"password\": \"password123\" }"
+    },
+    {
+      "testCaseId": "TC-AUTH-BE-003",
+      "description": "Attempt signup with name less than 2 characters (1 char)",
+      "actualResult": "Failed at step 1: Cannot parse action: Send POST request to /api/auth/signup with body: { \"name\": \"A\", \"email\": \"test@example.com\", \"password\": \"password123\" }",
+      "error": "Cannot parse action: Send POST request to /api/auth/signup with body: { \"name\": \"A\", \"email\": \"test@example.com\", \"password\": \"password123\" }"
+    },
+    {
+      "testCaseId": "TC-AUTH-BE-004",
+      "description": "Attempt signup with name exactly 2 characters",
+      "actualResult": "Failed at step 1: Cannot parse action: Send POST request to /api/auth/signup with body: { \"name\": \"AB\", \"email\": \"test@example.com\", \"password\": \"password123\" }",
+      "error": "Cannot parse action: Send POST request to /api/auth/signup with body: { \"name\": \"AB\", \"email\": \"test@example.com\", \"password\": \"password123\" }"
+    },
+    {
+      "testCaseId": "TC-AUTH-BE-005",
+      "description": "Attempt signup with name more than 100 characters (101 chars)",
+      "actualResult": "Failed at step 1: Cannot parse action: Send POST request to /api/auth/signup with body: { \"name\": \"A\".repeat(101), \"email\": \"test@example.com\", \"password\": \"password123\" }",
+      "error": "Cannot parse action: Send POST request to /api/auth/signup with body: { \"name\": \"A\".repeat(101), \"email\": \"test@example.com\", \"password\": \"password123\" }"
+    },
+    {
+      "testCaseId": "TC-AUTH-BE-006",
+      "description": "Attempt signup with name exactly 100 characters",
+      "actualResult": "Failed at step 1: Cannot parse action: Send POST request to /api/auth/signup with body: { \"name\": \"A\".repeat(100), \"email\": \"test@example.com\", \"password\": \"password123\" }",
+      "error": "Cannot parse action: Send POST request to /api/auth/signup with body: { \"name\": \"A\".repeat(100), \"email\": \"test@example.com\", \"password\": \"password123\" }"
+    },
+    {
+      "testCaseId": "TC-AUTH-BE-007",
+      "description": "Attempt signup without providing email field",
+      "actualResult": "Failed at step 1: Cannot parse action: Send POST request to /api/auth/signup with body: { \"name\": \"Test User\", \"password\": \"password123\" }",
+      "error": "Cannot parse action: Send POST request to /api/auth/signup with body: { \"name\": \"Test User\", \"password\": \"password123\" }"
+    },
+    {
+      "testCaseId": "TC-AUTH-BE-008",
+      "description": "Attempt signup with invalid email format",
+      "actualResult": "Failed at step 1: Cannot parse action: Send POST request to /api/auth/signup with body: { \"name\": \"Test User\", \"email\": \"notanemail\", \"password\": \"password123\" }",
+      "error": "Cannot parse action: Send POST request to /api/auth/signup with body: { \"name\": \"Test User\", \"email\": \"notanemail\", \"password\": \"password123\" }"
+    },
+    {
+      "testCaseId": "TC-AUTH-BE-009",
+      "description": "Attempt signup with email that already exists",
+      "actualResult": "Failed at step 1: Cannot parse action: Send POST request to /api/auth/signup with body: { \"name\": \"Test User\", \"email\": \"existing@example.com\", \"password\": \"password123\" }",
+      "error": "Cannot parse action: Send POST request to /api/auth/signup with body: { \"name\": \"Test User\", \"email\": \"existing@example.com\", \"password\": \"password123\" }"
+    },
+    {
+      "testCaseId": "TC-AUTH-BE-010",
+      "description": "Attempt signup without providing password field",
+      "actualResult": "Failed at step 1: Cannot parse action: Send POST request to /api/auth/signup with body: { \"name\": \"Test User\", \"email\": \"test@example.com\" }",
+      "error": "Cannot parse action: Send POST request to /api/auth/signup with body: { \"name\": \"Test User\", \"email\": \"test@example.com\" }"
+    },
+    {
+      "testCaseId": "TC-AUTH-BE-011",
+      "description": "Attempt signup with password less than 6 characters (5 chars)",
+      "actualResult": "Failed at step 1: Cannot parse action: Send POST request to /api/auth/signup with body: { \"name\": \"Test User\", \"email\": \"test@example.com\", \"password\": \"12345\" }",
+      "error": "Cannot parse action: Send POST request to /api/auth/signup with body: { \"name\": \"Test User\", \"email\": \"test@example.com\", \"password\": \"12345\" }"
+    },
+    {
+      "testCaseId": "TC-AUTH-BE-012",
+      "description": "Attempt signup with password exactly 6 characters",
+      "actualResult": "Failed at step 1: Cannot parse action: Send POST request to /api/auth/signup with body: { \"name\": \"Test User\", \"email\": \"test@example.com\", \"password\": \"123456\" }",
+      "error": "Cannot parse action: Send POST request to /api/auth/signup with body: { \"name\": \"Test User\", \"email\": \"test@example.com\", \"password\": \"123456\" }"
+    },
+    {
+      "testCaseId": "TC-AUTH-BE-013",
+      "description": "Attempt signup with password more than 100 characters (101 chars)",
+      "actualResult": "Failed at step 1: Cannot parse action: Send POST request to /api/auth/signup with body: { \"name\": \"Test User\", \"email\": \"test@example.com\", \"password\": \"a\".repeat(101) }",
+      "error": "Cannot parse action: Send POST request to /api/auth/signup with body: { \"name\": \"Test User\", \"email\": \"test@example.com\", \"password\": \"a\".repeat(101) }"
+    },
+    {
+      "testCaseId": "TC-AUTH-INT-001",
+      "description": "Verify complete login flow from UI to API to storage",
+      "actualResult": "Failed at step 2: Cannot parse action: Enter valid email and password",
+      "error": "Cannot parse action: Enter valid email and password"
+    },
+    {
+      "testCaseId": "TC-AUTH-INT-002",
+      "description": "Verify complete signup flow from UI to API to storage",
+      "actualResult": "Failed at step 2: Cannot parse action: Enter valid name, email, and password",
+      "error": "Cannot parse action: Enter valid name, email, and password"
+    },
+    {
+      "testCaseId": "TC-AUTH-INT-003",
+      "description": "Verify frontend properly displays error message on API failure",
+      "actualResult": "Failed at step 2: Cannot parse action: Enter invalid email or password",
+      "error": "Cannot parse action: Enter invalid email or password"
+    },
+    {
+      "testCaseId": "TC-AUTH-INT-006",
+      "description": "Verify protected routes redirect unauthenticated users to login",
+      "actualResult": "Failed at step 1: Cannot parse action: Clear localStorage (remove nexusai_token)",
+      "error": "Cannot parse action: Clear localStorage (remove nexusai_token)"
+    },
+    {
+      "testCaseId": "TC-AUTH-INT-007",
+      "description": "Verify logout clears all authentication state and cookies",
+      "actualResult": "Failed at step 1: Cannot parse action: Verify localStorage contains nexusai_token and nexusai_user",
+      "error": "Cannot parse action: Verify localStorage contains nexusai_token and nexusai_user"
+    }
+  ],
+  "passedTestCases": [
+    {
+      "testCaseId": "TC-AUTH-FE-008",
+      "description": "User continues as guest instead of logging in"
+    },
+    {
+      "testCaseId": "TC-AUTH-FE-009",
+      "description": "User navigates from login to signup page"
+    },
+    {
+      "testCaseId": "TC-AUTH-FE-022",
+      "description": "User navigates from signup to login page"
+    }
+  ],
+  "newBugsSummary": [
+    {
+      "bugId": "BR-045",
+      "testCaseId": "TC-AUTH-FE-001",
+      "module": "Authentication",
+      "description": "User successfully logs in with valid credentials",
+      "actualResult": "Failed at step 2: Cannot parse action: Enter valid email in email field"
+    },
+    {
+      "bugId": "BR-046",
+      "testCaseId": "TC-AUTH-FE-002",
+      "module": "Authentication",
+      "description": "User attempts login with invalid credentials",
+      "actualResult": "Failed at step 2: Cannot parse action: Enter invalid email in email field"
+    },
+    {
+      "bugId": "BR-047",
+      "testCaseId": "TC-AUTH-FE-003",
+      "module": "Authentication",
+      "description": "User attempts login without entering email",
+      "actualResult": "Failed at step 2: locator.fill: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[name*=\"email\"], input[id*=\"email\"], [placeholder*=\"email\"]').first()\u001b[22m\n"
+    },
+    {
+      "bugId": "BR-048",
+      "testCaseId": "TC-AUTH-FE-004",
+      "module": "Authentication",
+      "description": "User attempts login without entering password",
+      "actualResult": "Failed at step 2: Cannot parse action: Enter valid email in email field"
+    },
+    {
+      "bugId": "BR-049",
+      "testCaseId": "TC-AUTH-FE-005",
+      "module": "Authentication",
+      "description": "User attempts login with invalid email format",
+      "actualResult": "Failed at step 2: Cannot parse action: Enter \"notanemail\" in email field"
+    },
+    {
+      "bugId": "BR-050",
+      "testCaseId": "TC-AUTH-FE-006",
+      "module": "Authentication",
+      "description": "User checks \"Remember me\" checkbox during login",
+      "actualResult": "Failed at step 2: Cannot parse action: Enter valid email and password"
+    },
+    {
+      "bugId": "BR-051",
+      "testCaseId": "TC-AUTH-FE-007",
+      "module": "Authentication",
+      "description": "Verify loading state is displayed during login request",
+      "actualResult": "Failed at step 2: Cannot parse action: Enter valid email and password"
+    },
+    {
+      "bugId": "BR-052",
+      "testCaseId": "TC-AUTH-FE-010",
+      "module": "Authentication",
+      "description": "User successfully creates a new account",
+      "actualResult": "Failed at step 2: Cannot parse action: Enter valid full name (2-100 chars)"
+    },
+    {
+      "bugId": "BR-053",
+      "testCaseId": "TC-AUTH-FE-011",
+      "module": "Authentication",
+      "description": "User attempts signup without entering name",
+      "actualResult": "Failed at step 2: locator.fill: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[name*=\"name\"], input[id*=\"name\"], [placeholder*=\"name\"]').first()\u001b[22m\n"
+    },
+    {
+      "bugId": "BR-054",
+      "testCaseId": "TC-AUTH-FE-012",
+      "module": "Authentication",
+      "description": "User attempts signup with name less than 2 characters",
+      "actualResult": "Failed at step 2: Cannot parse action: Enter \"A\" (1 character) in name field"
+    },
+    {
+      "bugId": "BR-055",
+      "testCaseId": "TC-AUTH-FE-013",
+      "module": "Authentication",
+      "description": "User attempts signup with name more than 100 characters",
+      "actualResult": "Failed at step 2: Cannot parse action: Enter name with 101 characters"
+    },
+    {
+      "bugId": "BR-056",
+      "testCaseId": "TC-AUTH-FE-014",
+      "module": "Authentication",
+      "description": "User attempts signup without entering email",
+      "actualResult": "Failed at step 2: Cannot parse action: Enter valid name and password"
+    },
+    {
+      "bugId": "BR-057",
+      "testCaseId": "TC-AUTH-FE-015",
+      "module": "Authentication",
+      "description": "User attempts signup with invalid email format",
+      "actualResult": "Failed at step 2: Cannot parse action: Enter valid name and password"
+    },
+    {
+      "bugId": "BR-058",
+      "testCaseId": "TC-AUTH-FE-016",
+      "module": "Authentication",
+      "description": "User attempts signup without entering password",
+      "actualResult": "Failed at step 2: Cannot parse action: Enter valid name and email"
+    },
+    {
+      "bugId": "BR-059",
+      "testCaseId": "TC-AUTH-FE-017",
+      "module": "Authentication",
+      "description": "User attempts signup with password less than 6 characters (boundary: 5)",
+      "actualResult": "Failed at step 2: Cannot parse action: Enter valid name and email"
+    },
+    {
+      "bugId": "BR-060",
+      "testCaseId": "TC-AUTH-FE-018",
+      "module": "Authentication",
+      "description": "User successfully signs up with password exactly 6 characters",
+      "actualResult": "Failed at step 2: Cannot parse action: Enter valid name and email"
+    },
+    {
+      "bugId": "BR-061",
+      "testCaseId": "TC-AUTH-FE-019",
+      "module": "Authentication",
+      "description": "User attempts signup with password more than 100 characters",
+      "actualResult": "Failed at step 2: Cannot parse action: Enter valid name and email"
+    },
+    {
+      "bugId": "BR-062",
+      "testCaseId": "TC-AUTH-FE-020",
+      "module": "Authentication",
+      "description": "Verify loading state is displayed during signup request",
+      "actualResult": "Failed at step 2: Cannot parse action: Enter valid name, email, and password"
+    },
+    {
+      "bugId": "BR-063",
+      "testCaseId": "TC-AUTH-FE-021",
+      "module": "Authentication",
+      "description": "User attempts signup with email that already exists",
+      "actualResult": "Failed at step 2: Cannot parse action: Enter valid name"
+    },
+    {
+      "bugId": "BR-064",
+      "testCaseId": "TC-AUTH-BE-014",
+      "module": "Authentication",
+      "description": "User successfully logs in with valid credentials",
+      "actualResult": "Failed at step 2: Cannot parse action: Verify response status code"
+    },
+    {
+      "bugId": "BR-065",
+      "testCaseId": "TC-AUTH-BE-015",
+      "module": "Authentication",
+      "description": "Attempt login with non-existent email",
+      "actualResult": "Failed at step 2: Cannot parse action: Verify response status code"
+    },
+    {
+      "bugId": "BR-066",
+      "testCaseId": "TC-AUTH-BE-016",
+      "module": "Authentication",
+      "description": "Attempt login with correct email but wrong password",
+      "actualResult": "Failed at step 2: Cannot parse action: Verify response status code"
+    },
+    {
+      "bugId": "BR-067",
+      "testCaseId": "TC-AUTH-BE-017",
+      "module": "Authentication",
+      "description": "Attempt login without providing email",
+      "actualResult": "Failed at step 2: Cannot parse action: Verify response status code"
+    },
+    {
+      "bugId": "BR-068",
+      "testCaseId": "TC-AUTH-BE-018",
+      "module": "Authentication",
+      "description": "Attempt login with invalid email format",
+      "actualResult": "Failed at step 2: Cannot parse action: Verify response status code"
+    },
+    {
+      "bugId": "BR-069",
+      "testCaseId": "TC-AUTH-BE-019",
+      "module": "Authentication",
+      "description": "Attempt login without providing password",
+      "actualResult": "Failed at step 2: Cannot parse action: Verify response status code"
+    },
+    {
+      "bugId": "BR-070",
+      "testCaseId": "TC-AUTH-BE-020",
+      "module": "Authentication",
+      "description": "Attempt login with password less than 6 characters",
+      "actualResult": "Failed at step 2: Cannot parse action: Verify response status code"
+    },
+    {
+      "bugId": "BR-071",
+      "testCaseId": "TC-AUTH-BE-001",
+      "module": "Authentication",
+      "description": "Create a new user account with valid data",
+      "actualResult": "Failed at step 1: Cannot parse action: Send POST request to /api/auth/signup with body: { \"name\": \"Test User\", \"email\": \"test@example.com\", \"password\": \"password123\" }"
+    },
+    {
+      "bugId": "BR-072",
+      "testCaseId": "TC-AUTH-BE-002",
+      "module": "Authentication",
+      "description": "Attempt signup without providing name field",
+      "actualResult": "Failed at step 1: Cannot parse action: Send POST request to /api/auth/signup with body: { \"email\": \"test@example.com\", \"password\": \"password123\" }"
+    },
+    {
+      "bugId": "BR-073",
+      "testCaseId": "TC-AUTH-BE-003",
+      "module": "Authentication",
+      "description": "Attempt signup with name less than 2 characters (1 char)",
+      "actualResult": "Failed at step 1: Cannot parse action: Send POST request to /api/auth/signup with body: { \"name\": \"A\", \"email\": \"test@example.com\", \"password\": \"password123\" }"
+    },
+    {
+      "bugId": "BR-074",
+      "testCaseId": "TC-AUTH-BE-004",
+      "module": "Authentication",
+      "description": "Attempt signup with name exactly 2 characters",
+      "actualResult": "Failed at step 1: Cannot parse action: Send POST request to /api/auth/signup with body: { \"name\": \"AB\", \"email\": \"test@example.com\", \"password\": \"password123\" }"
+    },
+    {
+      "bugId": "BR-075",
+      "testCaseId": "TC-AUTH-BE-005",
+      "module": "Authentication",
+      "description": "Attempt signup with name more than 100 characters (101 chars)",
+      "actualResult": "Failed at step 1: Cannot parse action: Send POST request to /api/auth/signup with body: { \"name\": \"A\".repeat(101), \"email\": \"test@example.com\", \"password\": \"password123\" }"
+    },
+    {
+      "bugId": "BR-076",
+      "testCaseId": "TC-AUTH-BE-006",
+      "module": "Authentication",
+      "description": "Attempt signup with name exactly 100 characters",
+      "actualResult": "Failed at step 1: Cannot parse action: Send POST request to /api/auth/signup with body: { \"name\": \"A\".repeat(100), \"email\": \"test@example.com\", \"password\": \"password123\" }"
+    },
+    {
+      "bugId": "BR-077",
+      "testCaseId": "TC-AUTH-BE-007",
+      "module": "Authentication",
+      "description": "Attempt signup without providing email field",
+      "actualResult": "Failed at step 1: Cannot parse action: Send POST request to /api/auth/signup with body: { \"name\": \"Test User\", \"password\": \"password123\" }"
+    },
+    {
+      "bugId": "BR-078",
+      "testCaseId": "TC-AUTH-BE-008",
+      "module": "Authentication",
+      "description": "Attempt signup with invalid email format",
+      "actualResult": "Failed at step 1: Cannot parse action: Send POST request to /api/auth/signup with body: { \"name\": \"Test User\", \"email\": \"notanemail\", \"password\": \"password123\" }"
+    },
+    {
+      "bugId": "BR-079",
+      "testCaseId": "TC-AUTH-BE-009",
+      "module": "Authentication",
+      "description": "Attempt signup with email that already exists",
+      "actualResult": "Failed at step 1: Cannot parse action: Send POST request to /api/auth/signup with body: { \"name\": \"Test User\", \"email\": \"existing@example.com\", \"password\": \"password123\" }"
+    },
+    {
+      "bugId": "BR-080",
+      "testCaseId": "TC-AUTH-BE-010",
+      "module": "Authentication",
+      "description": "Attempt signup without providing password field",
+      "actualResult": "Failed at step 1: Cannot parse action: Send POST request to /api/auth/signup with body: { \"name\": \"Test User\", \"email\": \"test@example.com\" }"
+    },
+    {
+      "bugId": "BR-081",
+      "testCaseId": "TC-AUTH-BE-011",
+      "module": "Authentication",
+      "description": "Attempt signup with password less than 6 characters (5 chars)",
+      "actualResult": "Failed at step 1: Cannot parse action: Send POST request to /api/auth/signup with body: { \"name\": \"Test User\", \"email\": \"test@example.com\", \"password\": \"12345\" }"
+    },
+    {
+      "bugId": "BR-082",
+      "testCaseId": "TC-AUTH-BE-012",
+      "module": "Authentication",
+      "description": "Attempt signup with password exactly 6 characters",
+      "actualResult": "Failed at step 1: Cannot parse action: Send POST request to /api/auth/signup with body: { \"name\": \"Test User\", \"email\": \"test@example.com\", \"password\": \"123456\" }"
+    },
+    {
+      "bugId": "BR-083",
+      "testCaseId": "TC-AUTH-BE-013",
+      "module": "Authentication",
+      "description": "Attempt signup with password more than 100 characters (101 chars)",
+      "actualResult": "Failed at step 1: Cannot parse action: Send POST request to /api/auth/signup with body: { \"name\": \"Test User\", \"email\": \"test@example.com\", \"password\": \"a\".repeat(101) }"
+    },
+    {
+      "bugId": "BR-084",
+      "testCaseId": "TC-AUTH-INT-001",
+      "module": "Authentication",
+      "description": "Verify complete login flow from UI to API to storage",
+      "actualResult": "Failed at step 2: Cannot parse action: Enter valid email and password"
+    },
+    {
+      "bugId": "BR-085",
+      "testCaseId": "TC-AUTH-INT-002",
+      "module": "Authentication",
+      "description": "Verify complete signup flow from UI to API to storage",
+      "actualResult": "Failed at step 2: Cannot parse action: Enter valid name, email, and password"
+    },
+    {
+      "bugId": "BR-086",
+      "testCaseId": "TC-AUTH-INT-003",
+      "module": "Authentication",
+      "description": "Verify frontend properly displays error message on API failure",
+      "actualResult": "Failed at step 2: Cannot parse action: Enter invalid email or password"
+    },
+    {
+      "bugId": "BR-087",
+      "testCaseId": "TC-AUTH-INT-006",
+      "module": "Authentication",
+      "description": "Verify protected routes redirect unauthenticated users to login",
+      "actualResult": "Failed at step 1: Cannot parse action: Clear localStorage (remove nexusai_token)"
+    },
+    {
+      "bugId": "BR-088",
+      "testCaseId": "TC-AUTH-INT-007",
+      "module": "Authentication",
+      "description": "Verify logout clears all authentication state and cookies",
+      "actualResult": "Failed at step 1: Cannot parse action: Verify localStorage contains nexusai_token and nexusai_user"
+    }
+  ],
+  "recommendations": [
+    "The test automation framework has been successfully set up with Playwright",
+    "Tests are executed with 1 second wait between actions as requested",
+    "44 new bugs were detected during test execution",
+    "Due to Excel file being locked, new bugs could not be automatically added to Bug_Report.xlsx",
+    "Manual action required: Close Bug_Report.xlsx and run add-bugs-to-excel.js to add new bugs",
+    "Step parsing logic needs improvement to handle more test case patterns",
+    "Consider implementing form-specific selectors for better test automation reliability"
+  ]
+}
