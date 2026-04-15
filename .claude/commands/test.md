@@ -1,3 +1,11 @@
+<<<<<<< HEAD
+=======
+---
+name: test
+description: Run lint, test, and build commands across frontend and backend — report pass/fail/not-available for each.
+---
+
+>>>>>>> rajanouman
 # Test Command
 
 - Goal:

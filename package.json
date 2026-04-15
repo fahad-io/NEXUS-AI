@@ -1,9 +1,28 @@
 {
-  "dependencies": {
-    "xlsx": "^0.18.5"
+  "name": "nexus-ai",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "pipeline": "node agent-pipeline.js",
+    "test": "npx playwright test",
+    "run": "npm run pipeline && npm run test"
   },
-  "devDependencies": {
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fahad-io/NEXUS-AI.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/fahad-io/NEXUS-AI/issues"
+  },
+  "homepage": "https://github.com/fahad-io/NEXUS-AI#readme",
+  "dependencies": {
     "@playwright/test": "^1.59.1",
-    "playwright": "^1.59.1"
+    "axios": "^1.15.0",
+    "dotenv": "^17.4.2",
+    "fs": "^0.0.1-security"
   }
 }

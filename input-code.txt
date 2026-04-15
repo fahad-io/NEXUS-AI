@@ -1,0 +1,18 @@
+POST /api/auth/login
+Body:
+{
+  "email": "user@example.com",
+  "password": "secret123"
+}
+
+Success response:
+200 OK
+{
+  "access_token": "<jwt>"
+}
+
+Failure response:
+401 Unauthorized
+{
+  "message": "Invalid credentials"
+}

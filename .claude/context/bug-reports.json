@@ -1,0 +1,244 @@
+{
+  "run_id": "RUN-20260414-001",
+  "generated_at": "2026-04-14T00:00:00.000Z",
+  "total_failures": 72,
+  "bugs": [
+    {
+      "bug_id": "BUG-001",
+      "title": "Backend server unreachable — all API tests blocked (ECONNREFUSED :8080)",
+      "severity": "Blocker",
+      "module": "infrastructure",
+      "endpoint": "all",
+      "method": "ALL",
+      "root_cause": "Backend NestJS server is not running on localhost:8080. All test requests receive ECONNREFUSED, preventing any API endpoint from being exercised.",
+      "repro_steps": [
+        "Run: cd E:/NEXUS-AI && npx playwright test tests/api/",
+        "Observe: every test immediately fails with 'connect ECONNREFUSED ::1:8080'",
+        "Confirm backend is not started: no process listening on port 8080"
+      ],
+      "expected_result": "Backend running at http://localhost:8080 responds to all API requests",
+      "actual_result": "connect ECONNREFUSED ::1:8080 on every request — no server listening",
+      "affected_test_ids": [
+        "TC-001","TC-002","TC-003","TC-004","TC-005","TC-006",
+        "TC-007","TC-008","TC-009","TC-010","TC-011","TC-012",
+        "TC-013","TC-014","TC-015","TC-016","TC-017","TC-018",
+        "TC-019","TC-020","TC-021","TC-022",
+        "TC-023","TC-024","TC-025","TC-026","TC-027","TC-028","TC-029",
+        "TC-030","TC-031","TC-032","TC-033","TC-034","TC-035",
+        "TC-036","TC-037","TC-038","TC-039","TC-040","TC-041",
+        "TC-042","TC-043","TC-044","TC-045","TC-046","TC-047",
+        "TC-048","TC-049","TC-050",
+        "TC-051","TC-052","TC-053","TC-054","TC-055","TC-056",
+        "TC-057","TC-058","TC-059",
+        "TC-060","TC-061","TC-062","TC-063","TC-064",
+        "TC-065","TC-066","TC-067","TC-068",
+        "TC-069","TC-070","TC-071","TC-072"
+      ],
+      "trace_ids": [
+        "TRACE-RUN-20260414-TC001","TRACE-RUN-20260414-TC002","TRACE-RUN-20260414-TC003",
+        "TRACE-RUN-20260414-TC004","TRACE-RUN-20260414-TC005","TRACE-RUN-20260414-TC006"
+      ],
+      "fix_recommendation": "Start the NestJS backend before running tests: cd E:/NEXUS-AI/backend && npm run start:dev. Ensure MongoDB is running and backend/.env is configured with PORT=8080, JWT_SECRET, and MONGODB_URI.",
+      "environment": {
+        "platform": "win32",
+        "os": "Windows 11 Pro 10.0.22000",
+        "playwright_version": "1.59.1",
+        "base_url": "http://localhost:8080",
+        "run_id": "RUN-20260414-001"
+      }
+    },
+    {
+      "bug_id": "BUG-002",
+      "title": "Auth module (6 endpoints) — 22 test cases blocked by backend unavailability",
+      "severity": "Blocker",
+      "module": "auth",
+      "endpoint": "/api/auth/*",
+      "method": "POST/GET",
+      "root_cause": "Inherits from BUG-001. Backend not running; auth endpoints /api/auth/signup, /api/auth/login, /api/auth/me, /api/auth/refresh, /api/auth/logout could not be reached.",
+      "repro_steps": [
+        "Start backend with npm run start:dev from backend/",
+        "Run: npx playwright test tests/api/auth.spec.ts",
+        "Verify signup, login, refresh, logout, and /me all respond correctly"
+      ],
+      "expected_result": "All 22 auth test cases pass once backend is running",
+      "actual_result": "All 22 blocked with ECONNREFUSED",
+      "affected_test_ids": [
+        "TC-001","TC-002","TC-003","TC-004","TC-005","TC-006",
+        "TC-007","TC-008","TC-009","TC-010","TC-011","TC-012",
+        "TC-013","TC-014","TC-015","TC-016","TC-017","TC-018",
+        "TC-019","TC-020","TC-021","TC-022"
+      ],
+      "trace_ids": [],
+      "fix_recommendation": "Resolve BUG-001 first. Additional known risk: auth refresh token flow reads refresh_token from httpOnly cookie — ensure Playwright cookie jar is maintained between login and refresh test steps.",
+      "environment": {
+        "platform": "win32",
+        "run_id": "RUN-20260414-001"
+      }
+    },
+    {
+      "bug_id": "BUG-003",
+      "title": "Chat module (5 endpoints) — 19 test cases blocked by backend unavailability",
+      "severity": "Blocker",
+      "module": "chat",
+      "endpoint": "/api/chat/*",
+      "method": "POST/GET/DELETE",
+      "root_cause": "Inherits from BUG-001. Chat endpoints /api/chat/send, /api/chat/session, /api/chat/session/:id, /api/chat/history could not be reached.",
+      "repro_steps": [
+        "Start backend with npm run start:dev from backend/",
+        "Run: npx playwright test tests/api/chat.spec.ts"
+      ],
+      "expected_result": "All 19 chat test cases pass once backend is running",
+      "actual_result": "All 19 blocked with ECONNREFUSED",
+      "affected_test_ids": [
+        "TC-023","TC-024","TC-025","TC-026","TC-027","TC-028","TC-029",
+        "TC-030","TC-031","TC-032","TC-033","TC-034","TC-035",
+        "TC-036","TC-037","TC-038","TC-039","TC-040","TC-041"
+      ],
+      "trace_ids": [],
+      "fix_recommendation": "Resolve BUG-001 first. Known secondary risk: MOCK_AI env var must be set to 'true' for chat/send tests to avoid live Kimi API calls.",
+      "environment": {
+        "platform": "win32",
+        "run_id": "RUN-20260414-001"
+      }
+    },
+    {
+      "bug_id": "BUG-004",
+      "title": "Models module (2 endpoints) — 9 test cases blocked by backend unavailability",
+      "severity": "Blocker",
+      "module": "models",
+      "endpoint": "/api/models, /api/models/:id",
+      "method": "GET",
+      "root_cause": "Inherits from BUG-001. Public endpoints /api/models and /api/models/:id could not be reached.",
+      "repro_steps": [
+        "Start backend",
+        "Run: npx playwright test tests/api/models.spec.ts"
+      ],
+      "expected_result": "All 9 model test cases pass",
+      "actual_result": "All 9 blocked with ECONNREFUSED",
+      "affected_test_ids": [
+        "TC-042","TC-043","TC-044","TC-045","TC-046","TC-047","TC-048","TC-049","TC-050"
+      ],
+      "trace_ids": [],
+      "fix_recommendation": "Resolve BUG-001 first. Ensure models.json is seeded into MongoDB on startup (models.service.ts seed logic).",
+      "environment": {
+        "platform": "win32",
+        "run_id": "RUN-20260414-001"
+      }
+    },
+    {
+      "bug_id": "BUG-005",
+      "title": "Dashboard module (3 endpoints) — 9 test cases blocked by backend unavailability",
+      "severity": "Blocker",
+      "module": "dashboard",
+      "endpoint": "/api/dashboard/*",
+      "method": "GET",
+      "root_cause": "Inherits from BUG-001. JWT-protected endpoints /api/dashboard/stats, /api/dashboard/history, /api/dashboard/billing could not be reached.",
+      "repro_steps": [
+        "Start backend",
+        "Run: npx playwright test tests/api/dashboard.spec.ts"
+      ],
+      "expected_result": "All 9 dashboard test cases pass",
+      "actual_result": "All 9 blocked with ECONNREFUSED",
+      "affected_test_ids": [
+        "TC-051","TC-052","TC-053","TC-054","TC-055","TC-056","TC-057","TC-058","TC-059"
+      ],
+      "trace_ids": [],
+      "fix_recommendation": "Resolve BUG-001 first.",
+      "environment": {
+        "platform": "win32",
+        "run_id": "RUN-20260414-001"
+      }
+    },
+    {
+      "bug_id": "BUG-006",
+      "title": "Upload module (1 endpoint) — 5 test cases blocked by backend unavailability",
+      "severity": "Blocker",
+      "module": "upload",
+      "endpoint": "/api/upload",
+      "method": "POST",
+      "root_cause": "Inherits from BUG-001. Multipart file upload endpoint could not be reached.",
+      "repro_steps": [
+        "Start backend",
+        "Run upload tests from tests/api/ (note: upload spec not yet generated — needs Stage 3 extension)"
+      ],
+      "expected_result": "Upload tests pass",
+      "actual_result": "All 5 upload TCs blocked",
+      "affected_test_ids": ["TC-060","TC-061","TC-062","TC-063","TC-064"],
+      "trace_ids": [],
+      "fix_recommendation": "Resolve BUG-001. Note: upload test spec was not generated in Stage 3 (no upload.spec.ts). Add upload tests and ensure uploads/ directory exists in backend.",
+      "environment": {
+        "platform": "win32",
+        "run_id": "RUN-20260414-001"
+      }
+    },
+    {
+      "bug_id": "BUG-007",
+      "title": "Forms module (2 endpoints) — 8 test cases blocked by backend unavailability",
+      "severity": "Blocker",
+      "module": "forms",
+      "endpoint": "/api/forms/contact, /api/forms/feedback",
+      "method": "POST",
+      "root_cause": "Inherits from BUG-001. Public form endpoints could not be reached.",
+      "repro_steps": [
+        "Start backend",
+        "Run: npx playwright test tests/api/forms.spec.ts"
+      ],
+      "expected_result": "All 8 forms test cases pass",
+      "actual_result": "All 8 blocked with ECONNREFUSED",
+      "affected_test_ids": [
+        "TC-065","TC-066","TC-067","TC-068","TC-069","TC-070","TC-071","TC-072"
+      ],
+      "trace_ids": [],
+      "fix_recommendation": "Resolve BUG-001 first.",
+      "environment": {
+        "platform": "win32",
+        "run_id": "RUN-20260414-001"
+      }
+    },
+    {
+      "bug_id": "BUG-008",
+      "title": "upload.spec.ts not generated — TC-060 through TC-064 have no Playwright script",
+      "severity": "Major",
+      "module": "upload",
+      "endpoint": "/api/upload",
+      "method": "POST",
+      "root_cause": "Stage 3 did not generate an upload.spec.ts file. The 5 upload test cases (TC-060 to TC-064) exist in testcases.json but have no corresponding Playwright script. Multipart file upload requires special handling (Buffer/blob construction) that was deferred.",
+      "repro_steps": [
+        "Check E:/NEXUS-AI/tests/api/ — no upload.spec.ts file exists",
+        "Note TC-060 through TC-064 in testcases.json have no corresponding spec"
+      ],
+      "expected_result": "upload.spec.ts exists in tests/api/ with tests for TC-060 through TC-064",
+      "actual_result": "No upload.spec.ts — upload test cases have no Playwright coverage",
+      "affected_test_ids": ["TC-060","TC-061","TC-062","TC-063","TC-064"],
+      "trace_ids": [],
+      "fix_recommendation": "Create tests/api/upload.spec.ts. Use Playwright request.post with multipart form data (fetch FormData or Buffer approach). Requires binary file fixture for image upload tests.",
+      "environment": {
+        "platform": "win32",
+        "run_id": "RUN-20260414-001"
+      }
+    }
+  ],
+  "triage_summary": {
+    "by_severity": {
+      "Blocker": 7,
+      "Critical": 0,
+      "Major": 1,
+      "Minor": 0,
+      "Trivial": 0
+    },
+    "by_root_cause": {
+      "Backend not running (ECONNREFUSED)": 7,
+      "Missing Playwright spec (upload module)": 1
+    },
+    "total_blocked_test_cases": 72,
+    "total_passed_test_cases": 0,
+    "total_failed_test_cases": 0,
+    "total_skipped_test_cases": 0,
+    "resolution_priority": [
+      "1. Start backend: cd E:/NEXUS-AI/backend && cp .env.example .env && npm install && npm run start:dev",
+      "2. Ensure MongoDB is running on localhost:27017",
+      "3. Re-run: cd E:/NEXUS-AI && npx playwright test tests/api/",
+      "4. Create tests/api/upload.spec.ts for TC-060 through TC-064"
+    ]
+  }
+}

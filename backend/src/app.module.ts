@@ -16,27 +16,9 @@ import { JwtAuthGuard } from './auth/jwt-auth.guard';
     ConfigModule.forRoot({ isGlobal: true }),
     MongooseModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (cfg: ConfigService) => {
-        const dnsServers = cfg.get<string>('MONGODB_DNS_SERVERS', '');
-        const dnsOptions = dnsServers ? {
-          servers: dnsServers.split(',').map(s => s.trim())
-        } : {};
-
-        return {
-          uri: cfg.get<string>('MONGODB_URI', 'mongodb://localhost:27017/nexusai'),
-          dbName: cfg.get<string>('MONGODB_DB_NAME'),
-          connectionFactory: (connection) => {
-            connection.on('connected', () => {
-              console.log('✅ MongoDB connected successfully');
-            });
-            connection.on('error', (err: Error) => {
-              console.error('❌ MongoDB connection error:', err);
-            });
-            return connection;
-          },
-          ...dnsOptions,
-        };
-      },
+      useFactory: (cfg: ConfigService) => ({
+        uri: cfg.get<string>('MONGODB_URI', 'mongodb://localhost:27017/nexusai'),
+      }),
     }),
     AuthModule,
     UsersModule,

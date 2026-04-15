@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs ls:*)",
+      "Bash(git -C /e/NEXUS-AI log --oneline -10)",
+      "Bash(cp -r E:/NEXUS-AI/Temp/.claude/agents E:/NEXUS-AI/.claude/)",
+      "Bash(cp -r E:/NEXUS-AI/Temp/.claude/commands E:/NEXUS-AI/.claude/)",
+      "Bash(cp -r E:/NEXUS-AI/Temp/.claude/context E:/NEXUS-AI/.claude/)",
+      "Bash(cp -r E:/NEXUS-AI/Temp/.claude/pipelines E:/NEXUS-AI/.claude/)",
+      "Bash(cp -r E:/NEXUS-AI/Temp/.claude/prompts E:/NEXUS-AI/.claude/)",
+      "Bash(cp -r /e/NEXUS-AI/Temp/.claude/agents /e/NEXUS-AI/.claude/)",
+      "Bash(cp -r /e/NEXUS-AI/Temp/.claude/skills /e/NEXUS-AI/.claude/)",
+      "Bash(cp -r /e/NEXUS-AI/Temp/.claude/pipelines /e/NEXUS-AI/.claude/)",
+      "Bash(npx playwright:*)",
+      "Bash(ls E:/NEXUS-AI/playwright.config.*)",
+      "Bash(ls E:/NEXUS-AI/*.config.*)",
+      "Bash(python3 -c \" import sys, json data = json.load\\(sys.stdin\\) total = 0 failed = 0 for suite in data.get\\('suites', []\\): for inner in suite.get\\('suites', []\\): for spec in inner.get\\('specs', []\\): total += 1 for t in spec.get\\('tests', []\\): for r in t.get\\('results', []\\): if r.get\\('status'\\) != 'passed': failed += 1 print\\(f'total={total} failed={failed}'\\) \")",
+      "Bash(node gen-silent-failures.cjs)",
+      "Bash(node gen-perf-excel.cjs)"
+    ]
+  }
+}

@@ -1,0 +1,1558 @@
+[
+  {
+    "id": "TC-001",
+    "app": "backend",
+    "suite": "api",
+    "module": "auth",
+    "endpoint_or_route": "POST /api/auth/signup",
+    "method": "POST",
+    "type": "positive",
+    "title": "Signup with valid credentials returns access token and user",
+    "preconditions": "Email not previously registered",
+    "steps": [
+      "Send POST /api/auth/signup with valid email, name, and password",
+      "Verify response status is 201",
+      "Verify response body contains access_token (string) and user object",
+      "Verify user object contains id, email, name, role fields",
+      "Verify Set-Cookie header contains refresh_token (httpOnly)"
+    ],
+    "test_data": {
+      "email": "newuser@example.com",
+      "name": "New User",
+      "password": "SecurePass123"
+    },
+    "expected_result": "201 Created with { access_token: string, user: { id, email, name, role } } and Set-Cookie: refresh_token",
+    "priority": "P0",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-002",
+    "app": "backend",
+    "suite": "api",
+    "module": "auth",
+    "endpoint_or_route": "POST /api/auth/signup",
+    "method": "POST",
+    "type": "negative",
+    "title": "Signup with duplicate email returns 409 Conflict",
+    "preconditions": "User with that email already exists",
+    "steps": [
+      "Send POST /api/auth/signup with email that already exists in database",
+      "Verify response status is 409",
+      "Verify response body contains error message about email already in use"
+    ],
+    "test_data": {
+      "email": "existing@example.com",
+      "name": "Duplicate User",
+      "password": "SecurePass123"
+    },
+    "expected_result": "409 Conflict with { message: 'Email already in use' }",
+    "priority": "P0",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-003",
+    "app": "backend",
+    "suite": "api",
+    "module": "auth",
+    "endpoint_or_route": "POST /api/auth/signup",
+    "method": "POST",
+    "type": "negative",
+    "title": "Signup with missing required fields returns 400",
+    "preconditions": "None",
+    "steps": [
+      "Send POST /api/auth/signup with empty body {}",
+      "Verify response status is 400",
+      "Verify response body contains validation error messages"
+    ],
+    "test_data": {},
+    "expected_result": "400 Bad Request with validation error messages for email, name, password",
+    "priority": "P0",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-004",
+    "app": "backend",
+    "suite": "api",
+    "module": "auth",
+    "endpoint_or_route": "POST /api/auth/signup",
+    "method": "POST",
+    "type": "field-validation",
+    "title": "Signup with invalid email format returns 400",
+    "preconditions": "None",
+    "steps": [
+      "Send POST /api/auth/signup with email = 'not-an-email'",
+      "Verify response status is 400",
+      "Verify error message references invalid email format"
+    ],
+    "test_data": {
+      "email": "not-an-email",
+      "name": "Test User",
+      "password": "SecurePass123"
+    },
+    "expected_result": "400 Bad Request with email validation error",
+    "priority": "P0",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-005",
+    "app": "backend",
+    "suite": "api",
+    "module": "auth",
+    "endpoint_or_route": "POST /api/auth/signup",
+    "method": "POST",
+    "type": "field-validation",
+    "title": "Signup with password shorter than 6 chars returns 400",
+    "preconditions": "None",
+    "steps": [
+      "Send POST /api/auth/signup with password = '12345' (5 chars)",
+      "Verify response status is 400",
+      "Verify error references minLength constraint"
+    ],
+    "test_data": {
+      "email": "user@example.com",
+      "name": "Test User",
+      "password": "12345"
+    },
+    "expected_result": "400 Bad Request with password minLength validation error",
+    "priority": "P0",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-006",
+    "app": "backend",
+    "suite": "api",
+    "module": "auth",
+    "endpoint_or_route": "POST /api/auth/signup",
+    "method": "POST",
+    "type": "field-validation",
+    "title": "Signup with name shorter than 2 chars returns 400",
+    "preconditions": "None",
+    "steps": [
+      "Send POST /api/auth/signup with name = 'A' (1 char)",
+      "Verify response status is 400",
+      "Verify error references name minLength constraint"
+    ],
+    "test_data": {
+      "email": "user@example.com",
+      "name": "A",
+      "password": "SecurePass123"
+    },
+    "expected_result": "400 Bad Request with name minLength validation error",
+    "priority": "P0",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-007",
+    "app": "backend",
+    "suite": "api",
+    "module": "auth",
+    "endpoint_or_route": "POST /api/auth/login",
+    "method": "POST",
+    "type": "positive",
+    "title": "Login with valid credentials returns access token",
+    "preconditions": "User exists with matching credentials",
+    "steps": [
+      "Send POST /api/auth/login with valid email and password",
+      "Verify response status is 200",
+      "Verify response body contains access_token, refresh_token, and user object",
+      "Verify Set-Cookie header sets refresh_token (httpOnly)"
+    ],
+    "test_data": {
+      "email": "test@example.com",
+      "password": "ValidPass123"
+    },
+    "expected_result": "200 OK with { access_token: string, refresh_token: string, user: { id, email, name, role } }",
+    "priority": "P0",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-008",
+    "app": "backend",
+    "suite": "api",
+    "module": "auth",
+    "endpoint_or_route": "POST /api/auth/login",
+    "method": "POST",
+    "type": "negative",
+    "title": "Login with wrong password returns 401",
+    "preconditions": "User exists in database",
+    "steps": [
+      "Send POST /api/auth/login with correct email but wrong password",
+      "Verify response status is 401",
+      "Verify response body contains 'Invalid credentials' message"
+    ],
+    "test_data": {
+      "email": "test@example.com",
+      "password": "WrongPassword"
+    },
+    "expected_result": "401 Unauthorized with { message: 'Invalid credentials' }",
+    "priority": "P0",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-009",
+    "app": "backend",
+    "suite": "api",
+    "module": "auth",
+    "endpoint_or_route": "POST /api/auth/login",
+    "method": "POST",
+    "type": "negative",
+    "title": "Login with non-existent email returns 401",
+    "preconditions": "Email does not exist in database",
+    "steps": [
+      "Send POST /api/auth/login with email that does not exist",
+      "Verify response status is 401",
+      "Verify response does not reveal whether email exists"
+    ],
+    "test_data": {
+      "email": "nonexistent@example.com",
+      "password": "SomePassword123"
+    },
+    "expected_result": "401 Unauthorized with generic invalid credentials message",
+    "priority": "P0",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-010",
+    "app": "backend",
+    "suite": "api",
+    "module": "auth",
+    "endpoint_or_route": "POST /api/auth/login",
+    "method": "POST",
+    "type": "field-validation",
+    "title": "Login with invalid email format returns 400",
+    "preconditions": "None",
+    "steps": [
+      "Send POST /api/auth/login with email = 'invalid-email'",
+      "Verify response status is 400",
+      "Verify error references email format constraint"
+    ],
+    "test_data": {
+      "email": "invalid-email",
+      "password": "ValidPass123"
+    },
+    "expected_result": "400 Bad Request with email validation error",
+    "priority": "P0",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-011",
+    "app": "backend",
+    "suite": "api",
+    "module": "auth",
+    "endpoint_or_route": "POST /api/auth/login",
+    "method": "POST",
+    "type": "negative",
+    "title": "Login with empty body returns 400",
+    "preconditions": "None",
+    "steps": [
+      "Send POST /api/auth/login with empty body {}",
+      "Verify response status is 400",
+      "Verify response contains validation errors for email and password"
+    ],
+    "test_data": {},
+    "expected_result": "400 Bad Request with validation error messages",
+    "priority": "P0",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-012",
+    "app": "backend",
+    "suite": "api",
+    "module": "auth",
+    "endpoint_or_route": "GET /api/auth/me",
+    "method": "GET",
+    "type": "positive",
+    "title": "GET /auth/me with valid JWT returns authenticated user",
+    "preconditions": "Valid JWT access token available",
+    "steps": [
+      "Send GET /api/auth/me with Authorization: Bearer <valid_token>",
+      "Verify response status is 200",
+      "Verify response body contains user object with id, email, name, role"
+    ],
+    "test_data": {
+      "Authorization": "Bearer <valid_jwt>"
+    },
+    "expected_result": "200 OK with { user: { id, email, name, role } }",
+    "priority": "P0",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-013",
+    "app": "backend",
+    "suite": "api",
+    "module": "auth",
+    "endpoint_or_route": "GET /api/auth/me",
+    "method": "GET",
+    "type": "negative",
+    "title": "GET /auth/me without JWT returns 401",
+    "preconditions": "No Authorization header",
+    "steps": [
+      "Send GET /api/auth/me without Authorization header",
+      "Verify response status is 401",
+      "Verify response contains Unauthorized message"
+    ],
+    "test_data": {},
+    "expected_result": "401 Unauthorized",
+    "priority": "P0",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-014",
+    "app": "backend",
+    "suite": "api",
+    "module": "auth",
+    "endpoint_or_route": "GET /api/auth/me",
+    "method": "GET",
+    "type": "negative",
+    "title": "GET /auth/me with malformed JWT returns 401",
+    "preconditions": "None",
+    "steps": [
+      "Send GET /api/auth/me with Authorization: Bearer not-a-real-token",
+      "Verify response status is 401"
+    ],
+    "test_data": {
+      "Authorization": "Bearer not-a-real-token"
+    },
+    "expected_result": "401 Unauthorized",
+    "priority": "P0",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-015",
+    "app": "backend",
+    "suite": "api",
+    "module": "auth",
+    "endpoint_or_route": "POST /api/auth/refresh",
+    "method": "POST",
+    "type": "positive",
+    "title": "Token refresh with valid refresh cookie returns new access token",
+    "preconditions": "Valid refresh_token cookie set from prior login",
+    "steps": [
+      "Send POST /api/auth/refresh with refresh_token cookie",
+      "Verify response status is 200",
+      "Verify response body contains new access_token and user",
+      "Verify new Set-Cookie refresh_token is issued"
+    ],
+    "test_data": {
+      "cookie": "refresh_token=<valid_refresh_token>"
+    },
+    "expected_result": "200 OK with { access_token: string, user: object } and new Set-Cookie refresh_token",
+    "priority": "P0",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-016",
+    "app": "backend",
+    "suite": "api",
+    "module": "auth",
+    "endpoint_or_route": "POST /api/auth/refresh",
+    "method": "POST",
+    "type": "negative",
+    "title": "Token refresh without cookie returns 401",
+    "preconditions": "No refresh_token cookie present",
+    "steps": [
+      "Send POST /api/auth/refresh with no cookies",
+      "Verify response status is 401",
+      "Verify response contains 'Refresh token is missing'"
+    ],
+    "test_data": {},
+    "expected_result": "401 Unauthorized with { message: 'Refresh token is missing' }",
+    "priority": "P0",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-017",
+    "app": "backend",
+    "suite": "api",
+    "module": "auth",
+    "endpoint_or_route": "POST /api/auth/refresh",
+    "method": "POST",
+    "type": "negative",
+    "title": "Token refresh with tampered token returns 401",
+    "preconditions": "None",
+    "steps": [
+      "Send POST /api/auth/refresh with cookie refresh_token=tampered_invalid_value",
+      "Verify response status is 401",
+      "Verify response contains invalid token error"
+    ],
+    "test_data": {
+      "cookie": "refresh_token=tampered_invalid_token"
+    },
+    "expected_result": "401 Unauthorized with token invalid message",
+    "priority": "P0",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-018",
+    "app": "backend",
+    "suite": "api",
+    "module": "auth",
+    "endpoint_or_route": "POST /api/auth/logout",
+    "method": "POST",
+    "type": "positive",
+    "title": "Logout with valid refresh cookie clears session",
+    "preconditions": "User is logged in with refresh_token cookie set",
+    "steps": [
+      "Send POST /api/auth/logout with refresh_token cookie",
+      "Verify response status is 200",
+      "Verify response body is { success: true }",
+      "Verify Set-Cookie header clears refresh_token"
+    ],
+    "test_data": {
+      "cookie": "refresh_token=<valid_refresh_token>"
+    },
+    "expected_result": "200 OK with { success: true } and Set-Cookie clears refresh_token",
+    "priority": "P1",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-019",
+    "app": "backend",
+    "suite": "api",
+    "module": "auth",
+    "endpoint_or_route": "POST /api/auth/logout",
+    "method": "POST",
+    "type": "negative",
+    "title": "Logout without cookie still returns 200 (graceful degradation)",
+    "preconditions": "No refresh_token cookie",
+    "steps": [
+      "Send POST /api/auth/logout with no cookies",
+      "Verify response status is 200",
+      "Verify response body is { success: true } (no error thrown)"
+    ],
+    "test_data": {},
+    "expected_result": "200 OK with { success: true }",
+    "priority": "P1",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-020",
+    "app": "backend",
+    "suite": "api",
+    "module": "models",
+    "endpoint_or_route": "GET /api/models",
+    "method": "GET",
+    "type": "positive",
+    "title": "GET /models returns array of model objects without auth",
+    "preconditions": "Backend running with models seeded",
+    "steps": [
+      "Send GET /api/models without any Authorization header",
+      "Verify response status is 200",
+      "Verify response is an array",
+      "Verify each model has id, name/label fields"
+    ],
+    "test_data": {},
+    "expected_result": "200 OK with array of model objects",
+    "priority": "P1",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-021",
+    "app": "backend",
+    "suite": "api",
+    "module": "models",
+    "endpoint_or_route": "GET /api/models",
+    "method": "GET",
+    "type": "positive",
+    "title": "GET /models with type filter returns filtered results",
+    "preconditions": "Models seeded with diverse types",
+    "steps": [
+      "Send GET /api/models?type=chat",
+      "Verify response status is 200",
+      "Verify all returned models match the requested type"
+    ],
+    "test_data": {
+      "query": "type=chat"
+    },
+    "expected_result": "200 OK with filtered model array",
+    "priority": "P2",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-022",
+    "app": "backend",
+    "suite": "api",
+    "module": "models",
+    "endpoint_or_route": "GET /api/models",
+    "method": "GET",
+    "type": "positive",
+    "title": "GET /models with lab filter returns filtered results",
+    "preconditions": "Models seeded with multiple labs",
+    "steps": [
+      "Send GET /api/models?lab=OpenAI",
+      "Verify response status is 200",
+      "Verify all returned models belong to the specified lab"
+    ],
+    "test_data": {
+      "query": "lab=OpenAI"
+    },
+    "expected_result": "200 OK with models filtered by lab",
+    "priority": "P2",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-023",
+    "app": "backend",
+    "suite": "api",
+    "module": "models",
+    "endpoint_or_route": "GET /api/models",
+    "method": "GET",
+    "type": "positive",
+    "title": "GET /models with search query returns matching results",
+    "preconditions": "Models seeded",
+    "steps": [
+      "Send GET /api/models?search=gpt",
+      "Verify response status is 200",
+      "Verify returned models match the search term"
+    ],
+    "test_data": {
+      "query": "search=gpt"
+    },
+    "expected_result": "200 OK with models matching search term",
+    "priority": "P2",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-024",
+    "app": "backend",
+    "suite": "api",
+    "module": "models",
+    "endpoint_or_route": "GET /api/models/:id",
+    "method": "GET",
+    "type": "positive",
+    "title": "GET /models/:id with valid ID returns single model",
+    "preconditions": "Model with known ID exists",
+    "steps": [
+      "Fetch model list to get a valid ID",
+      "Send GET /api/models/{valid_model_id}",
+      "Verify response status is 200",
+      "Verify response is a single model object with matching id"
+    ],
+    "test_data": {
+      "id": "gpt-4o-mini"
+    },
+    "expected_result": "200 OK with single model object",
+    "priority": "P1",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-025",
+    "app": "backend",
+    "suite": "api",
+    "module": "models",
+    "endpoint_or_route": "GET /api/models/:id",
+    "method": "GET",
+    "type": "negative",
+    "title": "GET /models/:id with non-existent ID returns 404",
+    "preconditions": "None",
+    "steps": [
+      "Send GET /api/models/nonexistent-model-id-xyz",
+      "Verify response status is 404"
+    ],
+    "test_data": {
+      "id": "nonexistent-model-id-xyz"
+    },
+    "expected_result": "404 Not Found",
+    "priority": "P2",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-026",
+    "app": "backend",
+    "suite": "api",
+    "module": "chat",
+    "endpoint_or_route": "POST /api/chat/send",
+    "method": "POST",
+    "type": "positive",
+    "title": "Guest user sends message and receives AI reply",
+    "preconditions": "Backend running with MOCK_AI=true",
+    "steps": [
+      "Send POST /api/chat/send with valid message and modelId, no Authorization",
+      "Include X-Session-Id header with a UUID",
+      "Verify response status is 200",
+      "Verify response contains reply, modelId, sessionId, timestamp, and session"
+    ],
+    "test_data": {
+      "message": "Hello, how are you?",
+      "modelId": "gpt-4o-mini",
+      "headers": {
+        "x-session-id": "550e8400-e29b-41d4-a716-446655440000"
+      }
+    },
+    "expected_result": "200 OK with { reply: string, modelId, sessionId, timestamp, session }",
+    "priority": "P0",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-027",
+    "app": "backend",
+    "suite": "api",
+    "module": "chat",
+    "endpoint_or_route": "POST /api/chat/send",
+    "method": "POST",
+    "type": "positive",
+    "title": "Authenticated user sends message and receives AI reply",
+    "preconditions": "Valid JWT token for authenticated user",
+    "steps": [
+      "Send POST /api/chat/send with Authorization: Bearer <token>",
+      "Include valid message and modelId",
+      "Verify response status is 200",
+      "Verify session.isGuest is false"
+    ],
+    "test_data": {
+      "message": "Explain NLP to me",
+      "modelId": "gpt-4o-mini"
+    },
+    "expected_result": "200 OK with { reply, modelId, sessionId, session } where session.isGuest = false",
+    "priority": "P0",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-028",
+    "app": "backend",
+    "suite": "api",
+    "module": "chat",
+    "endpoint_or_route": "POST /api/chat/send",
+    "method": "POST",
+    "type": "negative",
+    "title": "Chat send with empty message returns 400",
+    "preconditions": "None",
+    "steps": [
+      "Send POST /api/chat/send with message = '' (empty string)",
+      "Verify response status is 400",
+      "Verify validation error references message minLength"
+    ],
+    "test_data": {
+      "message": "",
+      "modelId": "gpt-4o-mini"
+    },
+    "expected_result": "400 Bad Request with message minLength validation error",
+    "priority": "P0",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-029",
+    "app": "backend",
+    "suite": "api",
+    "module": "chat",
+    "endpoint_or_route": "POST /api/chat/send",
+    "method": "POST",
+    "type": "negative",
+    "title": "Chat send without modelId returns 400",
+    "preconditions": "None",
+    "steps": [
+      "Send POST /api/chat/send with message but no modelId",
+      "Verify response status is 400",
+      "Verify validation error references missing modelId"
+    ],
+    "test_data": {
+      "message": "Hello world"
+    },
+    "expected_result": "400 Bad Request with modelId validation error",
+    "priority": "P0",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-030",
+    "app": "backend",
+    "suite": "api",
+    "module": "chat",
+    "endpoint_or_route": "POST /api/chat/send",
+    "method": "POST",
+    "type": "field-validation",
+    "title": "Chat send with message exceeding 10000 chars returns 400",
+    "preconditions": "None",
+    "steps": [
+      "Send POST /api/chat/send with message of 10001 characters",
+      "Verify response status is 400",
+      "Verify error references maxLength constraint"
+    ],
+    "test_data": {
+      "message": "A_REPEATED_10001_CHARS",
+      "modelId": "gpt-4o-mini"
+    },
+    "expected_result": "400 Bad Request with message maxLength validation error",
+    "priority": "P1",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-031",
+    "app": "backend",
+    "suite": "api",
+    "module": "chat",
+    "endpoint_or_route": "POST /api/chat/send",
+    "method": "POST",
+    "type": "positive",
+    "title": "Chat send with sessionId continues existing guest session",
+    "preconditions": "A guest session was previously created",
+    "steps": [
+      "Send first message to get a sessionId",
+      "Send second POST /api/chat/send with same sessionId in body",
+      "Verify response sessionId matches the first response sessionId",
+      "Verify session messages array has 4 entries (2 user + 2 assistant)"
+    ],
+    "test_data": {
+      "message": "Follow up question",
+      "modelId": "gpt-4o-mini",
+      "sessionId": "<from_previous_response>"
+    },
+    "expected_result": "200 OK with same sessionId and session.messages.length = 4",
+    "priority": "P1",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-032",
+    "app": "backend",
+    "suite": "api",
+    "module": "chat",
+    "endpoint_or_route": "POST /api/chat/send",
+    "method": "POST",
+    "type": "field-validation",
+    "title": "Chat send with invalid type enum value returns 400",
+    "preconditions": "None",
+    "steps": [
+      "Send POST /api/chat/send with type = 'invalid_type'",
+      "Verify response status is 400",
+      "Verify validation error references invalid enum value for type"
+    ],
+    "test_data": {
+      "message": "Hello",
+      "modelId": "gpt-4o-mini",
+      "type": "invalid_type"
+    },
+    "expected_result": "400 Bad Request with enum validation error for type field",
+    "priority": "P2",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-033",
+    "app": "backend",
+    "suite": "api",
+    "module": "chat",
+    "endpoint_or_route": "POST /api/chat/session",
+    "method": "POST",
+    "type": "positive",
+    "title": "Authenticated user creates a new chat session",
+    "preconditions": "Valid JWT token",
+    "steps": [
+      "Send POST /api/chat/session with Authorization: Bearer <token>",
+      "Include optional modelId and title",
+      "Verify response status is 201",
+      "Verify response contains sessionId and session object"
+    ],
+    "test_data": {
+      "modelId": "gpt-4o-mini",
+      "title": "Test Session"
+    },
+    "expected_result": "201 Created with { sessionId: string, session: object }",
+    "priority": "P1",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-034",
+    "app": "backend",
+    "suite": "api",
+    "module": "chat",
+    "endpoint_or_route": "POST /api/chat/session",
+    "method": "POST",
+    "type": "negative",
+    "title": "Create session without JWT returns 401",
+    "preconditions": "No Authorization header",
+    "steps": [
+      "Send POST /api/chat/session without Authorization header",
+      "Verify response status is 401"
+    ],
+    "test_data": {
+      "modelId": "gpt-4o-mini"
+    },
+    "expected_result": "401 Unauthorized",
+    "priority": "P1",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-035",
+    "app": "backend",
+    "suite": "api",
+    "module": "chat",
+    "endpoint_or_route": "GET /api/chat/session/:id",
+    "method": "GET",
+    "type": "positive",
+    "title": "Authenticated user retrieves their own session",
+    "preconditions": "Session exists for the authenticated user",
+    "steps": [
+      "Create a session via POST /api/chat/session",
+      "Send GET /api/chat/session/{sessionId} with owner's JWT",
+      "Verify response status is 200",
+      "Verify response contains correct session data"
+    ],
+    "test_data": {
+      "sessionId": "<created_session_id>"
+    },
+    "expected_result": "200 OK with session object",
+    "priority": "P1",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-036",
+    "app": "backend",
+    "suite": "api",
+    "module": "chat",
+    "endpoint_or_route": "GET /api/chat/session/:id",
+    "method": "GET",
+    "type": "negative",
+    "title": "GET session owned by another user returns 404",
+    "preconditions": "Session belongs to user A; request made by user B",
+    "steps": [
+      "Send GET /api/chat/session/{userA_session_id} with user B's JWT",
+      "Verify response status is 404",
+      "Verify response contains 'Session not found or access denied'"
+    ],
+    "test_data": {
+      "sessionId": "<other_user_session_id>"
+    },
+    "expected_result": "404 Not Found with access denied message",
+    "priority": "P1",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-037",
+    "app": "backend",
+    "suite": "api",
+    "module": "chat",
+    "endpoint_or_route": "GET /api/chat/session/:id",
+    "method": "GET",
+    "type": "negative",
+    "title": "GET session without JWT returns 401",
+    "preconditions": "None",
+    "steps": [
+      "Send GET /api/chat/session/{any_id} without Authorization header",
+      "Verify response status is 401"
+    ],
+    "test_data": {},
+    "expected_result": "401 Unauthorized",
+    "priority": "P1",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-038",
+    "app": "backend",
+    "suite": "api",
+    "module": "chat",
+    "endpoint_or_route": "DELETE /api/chat/session/:id",
+    "method": "DELETE",
+    "type": "positive",
+    "title": "Authenticated user deletes their own session",
+    "preconditions": "Session exists for the authenticated user",
+    "steps": [
+      "Create a session via POST /api/chat/session",
+      "Send DELETE /api/chat/session/{sessionId} with owner's JWT",
+      "Verify response status is 200",
+      "Verify response body is { success: true }",
+      "Verify subsequent GET on same session returns 404"
+    ],
+    "test_data": {
+      "sessionId": "<created_session_id>"
+    },
+    "expected_result": "200 OK with { success: true }",
+    "priority": "P1",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-039",
+    "app": "backend",
+    "suite": "api",
+    "module": "chat",
+    "endpoint_or_route": "DELETE /api/chat/session/:id",
+    "method": "DELETE",
+    "type": "negative",
+    "title": "DELETE session owned by another user returns 404",
+    "preconditions": "Session belongs to user A",
+    "steps": [
+      "Send DELETE /api/chat/session/{userA_session_id} with user B's JWT",
+      "Verify response status is 404"
+    ],
+    "test_data": {
+      "sessionId": "<other_user_session_id>"
+    },
+    "expected_result": "404 Not Found",
+    "priority": "P1",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-040",
+    "app": "backend",
+    "suite": "api",
+    "module": "chat",
+    "endpoint_or_route": "DELETE /api/chat/session/:id",
+    "method": "DELETE",
+    "type": "negative",
+    "title": "DELETE session without JWT returns 401",
+    "preconditions": "None",
+    "steps": [
+      "Send DELETE /api/chat/session/{any_id} without Authorization header",
+      "Verify response status is 401"
+    ],
+    "test_data": {},
+    "expected_result": "401 Unauthorized",
+    "priority": "P1",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-041",
+    "app": "backend",
+    "suite": "api",
+    "module": "chat",
+    "endpoint_or_route": "GET /api/chat/history",
+    "method": "GET",
+    "type": "positive",
+    "title": "Authenticated user retrieves paginated chat history",
+    "preconditions": "User has at least one chat session",
+    "steps": [
+      "Send GET /api/chat/history with Authorization: Bearer <token>",
+      "Verify response status is 200",
+      "Verify response contains { data: array, total, page, limit, totalPages }"
+    ],
+    "test_data": {
+      "query": "page=1&limit=20"
+    },
+    "expected_result": "200 OK with { data: [], total: number, page: 1, limit: 20, totalPages: number }",
+    "priority": "P1",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-042",
+    "app": "backend",
+    "suite": "api",
+    "module": "chat",
+    "endpoint_or_route": "GET /api/chat/history",
+    "method": "GET",
+    "type": "negative",
+    "title": "Chat history without JWT returns 401",
+    "preconditions": "None",
+    "steps": [
+      "Send GET /api/chat/history without Authorization header",
+      "Verify response status is 401"
+    ],
+    "test_data": {},
+    "expected_result": "401 Unauthorized",
+    "priority": "P1",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-043",
+    "app": "backend",
+    "suite": "api",
+    "module": "dashboard",
+    "endpoint_or_route": "GET /api/dashboard/stats",
+    "method": "GET",
+    "type": "positive",
+    "title": "Authenticated user retrieves dashboard stats",
+    "preconditions": "Valid JWT token",
+    "steps": [
+      "Send GET /api/dashboard/stats with Authorization: Bearer <token>",
+      "Verify response status is 200",
+      "Verify response contains totalRequests, totalMessages, avgLatency, cost, modelUsage, activeSessions"
+    ],
+    "test_data": {},
+    "expected_result": "200 OK with { totalRequests, totalMessages, avgLatency, cost, modelUsage, activeSessions }",
+    "priority": "P1",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-044",
+    "app": "backend",
+    "suite": "api",
+    "module": "dashboard",
+    "endpoint_or_route": "GET /api/dashboard/stats",
+    "method": "GET",
+    "type": "negative",
+    "title": "Dashboard stats without JWT returns 401",
+    "preconditions": "None",
+    "steps": [
+      "Send GET /api/dashboard/stats without Authorization header",
+      "Verify response status is 401"
+    ],
+    "test_data": {},
+    "expected_result": "401 Unauthorized",
+    "priority": "P1",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-045",
+    "app": "backend",
+    "suite": "api",
+    "module": "dashboard",
+    "endpoint_or_route": "GET /api/dashboard/history",
+    "method": "GET",
+    "type": "positive",
+    "title": "Authenticated user retrieves dashboard history with pagination",
+    "preconditions": "Valid JWT token",
+    "steps": [
+      "Send GET /api/dashboard/history?page=1&limit=10 with Authorization",
+      "Verify response status is 200",
+      "Verify response contains data, total, page, limit, totalPages"
+    ],
+    "test_data": {
+      "query": "page=1&limit=10"
+    },
+    "expected_result": "200 OK with paginated history response",
+    "priority": "P2",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-046",
+    "app": "backend",
+    "suite": "api",
+    "module": "dashboard",
+    "endpoint_or_route": "GET /api/dashboard/billing",
+    "method": "GET",
+    "type": "positive",
+    "title": "Authenticated user retrieves billing information",
+    "preconditions": "Valid JWT token",
+    "steps": [
+      "Send GET /api/dashboard/billing with Authorization: Bearer <token>",
+      "Verify response status is 200",
+      "Verify response contains plan, status, billingCycle, nextBillingDate, usage, cost, invoices"
+    ],
+    "test_data": {},
+    "expected_result": "200 OK with { plan, status, billingCycle, nextBillingDate, usage, cost, invoices }",
+    "priority": "P2",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-047",
+    "app": "backend",
+    "suite": "api",
+    "module": "dashboard",
+    "endpoint_or_route": "GET /api/dashboard/billing",
+    "method": "GET",
+    "type": "negative",
+    "title": "Billing without JWT returns 401",
+    "preconditions": "None",
+    "steps": [
+      "Send GET /api/dashboard/billing without Authorization header",
+      "Verify response status is 401"
+    ],
+    "test_data": {},
+    "expected_result": "401 Unauthorized",
+    "priority": "P2",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-048",
+    "app": "backend",
+    "suite": "api",
+    "module": "forms",
+    "endpoint_or_route": "POST /api/forms/contact",
+    "method": "POST",
+    "type": "positive",
+    "title": "Contact form submission with valid data returns success",
+    "preconditions": "None",
+    "steps": [
+      "Send POST /api/forms/contact with valid name, email, message",
+      "Verify response status is 200",
+      "Verify response body contains { success: true, message: string }"
+    ],
+    "test_data": {
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "message": "I would like to learn more about your pricing plans."
+    },
+    "expected_result": "200 OK with { success: true, message: 'Thank you for contacting us!...' }",
+    "priority": "P2",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-049",
+    "app": "backend",
+    "suite": "api",
+    "module": "forms",
+    "endpoint_or_route": "POST /api/forms/contact",
+    "method": "POST",
+    "type": "negative",
+    "title": "Contact form with missing fields returns 400",
+    "preconditions": "None",
+    "steps": [
+      "Send POST /api/forms/contact with empty body {}",
+      "Verify response status is 400",
+      "Verify validation errors for name, email, message"
+    ],
+    "test_data": {},
+    "expected_result": "400 Bad Request with validation errors for all required fields",
+    "priority": "P2",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-050",
+    "app": "backend",
+    "suite": "api",
+    "module": "forms",
+    "endpoint_or_route": "POST /api/forms/contact",
+    "method": "POST",
+    "type": "field-validation",
+    "title": "Contact form message shorter than 10 chars returns 400",
+    "preconditions": "None",
+    "steps": [
+      "Send POST /api/forms/contact with message = 'Short' (5 chars)",
+      "Verify response status is 400",
+      "Verify error references message minLength of 10"
+    ],
+    "test_data": {
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "message": "Short"
+    },
+    "expected_result": "400 Bad Request with message minLength validation error",
+    "priority": "P2",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-051",
+    "app": "backend",
+    "suite": "api",
+    "module": "forms",
+    "endpoint_or_route": "POST /api/forms/contact",
+    "method": "POST",
+    "type": "field-validation",
+    "title": "Contact form message exceeding 2000 chars returns 400",
+    "preconditions": "None",
+    "steps": [
+      "Send POST /api/forms/contact with message of 2001 characters",
+      "Verify response status is 400"
+    ],
+    "test_data": {
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "message": "A_REPEATED_2001_CHARS"
+    },
+    "expected_result": "400 Bad Request with message maxLength validation error",
+    "priority": "P3",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-052",
+    "app": "backend",
+    "suite": "api",
+    "module": "forms",
+    "endpoint_or_route": "POST /api/forms/feedback",
+    "method": "POST",
+    "type": "positive",
+    "title": "Feedback form submission with valid data returns success",
+    "preconditions": "None",
+    "steps": [
+      "Send POST /api/forms/feedback with rating=5, message='Great platform experience', page='/home'",
+      "Verify response status is 200",
+      "Verify response body is { success: true, message: string }"
+    ],
+    "test_data": {
+      "rating": 5,
+      "message": "Great platform experience",
+      "page": "/home"
+    },
+    "expected_result": "200 OK with { success: true, message: 'Thank you for your feedback!' }",
+    "priority": "P2",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-053",
+    "app": "backend",
+    "suite": "api",
+    "module": "forms",
+    "endpoint_or_route": "POST /api/forms/feedback",
+    "method": "POST",
+    "type": "field-validation",
+    "title": "Feedback form with rating below 1 returns 400",
+    "preconditions": "None",
+    "steps": [
+      "Send POST /api/forms/feedback with rating=0",
+      "Verify response status is 400",
+      "Verify error references rating Min(1) constraint"
+    ],
+    "test_data": {
+      "rating": 0,
+      "message": "Feedback message here"
+    },
+    "expected_result": "400 Bad Request with rating min constraint error",
+    "priority": "P2",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-054",
+    "app": "backend",
+    "suite": "api",
+    "module": "forms",
+    "endpoint_or_route": "POST /api/forms/feedback",
+    "method": "POST",
+    "type": "field-validation",
+    "title": "Feedback form with rating above 5 returns 400",
+    "preconditions": "None",
+    "steps": [
+      "Send POST /api/forms/feedback with rating=6",
+      "Verify response status is 400",
+      "Verify error references rating Max(5) constraint"
+    ],
+    "test_data": {
+      "rating": 6,
+      "message": "Great feedback here"
+    },
+    "expected_result": "400 Bad Request with rating max constraint error",
+    "priority": "P2",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-055",
+    "app": "backend",
+    "suite": "api",
+    "module": "forms",
+    "endpoint_or_route": "POST /api/forms/feedback",
+    "method": "POST",
+    "type": "negative",
+    "title": "Feedback form with missing required fields returns 400",
+    "preconditions": "None",
+    "steps": [
+      "Send POST /api/forms/feedback with empty body {}",
+      "Verify response status is 400",
+      "Verify errors for rating and message fields"
+    ],
+    "test_data": {},
+    "expected_result": "400 Bad Request with validation errors",
+    "priority": "P2",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-056",
+    "app": "backend",
+    "suite": "api",
+    "module": "upload",
+    "endpoint_or_route": "POST /api/upload",
+    "method": "POST",
+    "type": "positive",
+    "title": "Upload valid image file returns file info",
+    "preconditions": "Backend running with uploads/ directory writable",
+    "steps": [
+      "Send POST /api/upload with multipart/form-data containing a valid JPEG file",
+      "Verify response status is 200",
+      "Verify response contains url, filename, size, type"
+    ],
+    "test_data": {
+      "file": "test-image.jpg (image/jpeg, under 50MB)"
+    },
+    "expected_result": "200 OK with { url, filename, size, type }",
+    "priority": "P1",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-057",
+    "app": "backend",
+    "suite": "api",
+    "module": "upload",
+    "endpoint_or_route": "POST /api/upload",
+    "method": "POST",
+    "type": "negative",
+    "title": "Upload without file returns 400",
+    "preconditions": "None",
+    "steps": [
+      "Send POST /api/upload with empty multipart body (no file field)",
+      "Verify response status is 400",
+      "Verify response contains 'No file provided'"
+    ],
+    "test_data": {},
+    "expected_result": "400 Bad Request with { message: 'No file provided' }",
+    "priority": "P1",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-058",
+    "app": "backend",
+    "suite": "api",
+    "module": "upload",
+    "endpoint_or_route": "POST /api/upload",
+    "method": "POST",
+    "type": "negative",
+    "title": "Upload with disallowed MIME type returns 400",
+    "preconditions": "None",
+    "steps": [
+      "Send POST /api/upload with a .exe file (application/octet-stream)",
+      "Verify response status is 400",
+      "Verify response contains file type not allowed message"
+    ],
+    "test_data": {
+      "file": "malware.exe (application/octet-stream)"
+    },
+    "expected_result": "400 Bad Request with file type not allowed message",
+    "priority": "P1",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-059",
+    "app": "backend",
+    "suite": "api",
+    "module": "upload",
+    "endpoint_or_route": "POST /api/upload",
+    "method": "POST",
+    "type": "field-validation",
+    "title": "Upload file exceeding 50MB returns error",
+    "preconditions": "None",
+    "steps": [
+      "Send POST /api/upload with a file larger than 50MB",
+      "Verify server returns 413 or 400",
+      "Verify response contains file size limit message"
+    ],
+    "test_data": {
+      "file": "large-file.mp4 (over 50MB)"
+    },
+    "expected_result": "413 Payload Too Large or 400 Bad Request with file size limit error",
+    "priority": "P2",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-060",
+    "app": "backend",
+    "suite": "api",
+    "module": "auth",
+    "endpoint_or_route": "POST /api/auth/login",
+    "method": "POST",
+    "type": "performance",
+    "title": "Login endpoint responds within 500ms threshold",
+    "preconditions": "User exists in database; backend running",
+    "steps": [
+      "Send POST /api/auth/login with valid credentials",
+      "Record total response time from request dispatch to full response",
+      "Verify response time is <= 500ms"
+    ],
+    "test_data": {
+      "email": "test@example.com",
+      "password": "ValidPass123"
+    },
+    "expected_result": "Response within 500ms with 200 OK",
+    "priority": "P0",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-061",
+    "app": "backend",
+    "suite": "api",
+    "module": "chat",
+    "endpoint_or_route": "POST /api/chat/send",
+    "method": "POST",
+    "type": "performance",
+    "title": "Chat send responds within 2000ms in MOCK_AI mode",
+    "preconditions": "Backend running with MOCK_AI=true",
+    "steps": [
+      "Send POST /api/chat/send with valid message",
+      "Record total response time",
+      "Verify response time is <= 2000ms"
+    ],
+    "test_data": {
+      "message": "Tell me about AI models",
+      "modelId": "gpt-4o-mini"
+    },
+    "expected_result": "Response within 2000ms with 200 OK",
+    "priority": "P0",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-062",
+    "app": "backend",
+    "suite": "api",
+    "module": "models",
+    "endpoint_or_route": "GET /api/models",
+    "method": "GET",
+    "type": "performance",
+    "title": "Models list endpoint responds within 1000ms",
+    "preconditions": "Backend running with models seeded",
+    "steps": [
+      "Send GET /api/models",
+      "Record response time",
+      "Verify response time is <= 1000ms"
+    ],
+    "test_data": {},
+    "expected_result": "Response within 1000ms with 200 OK",
+    "priority": "P1",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-063",
+    "app": "backend",
+    "suite": "api",
+    "module": "auth",
+    "endpoint_or_route": "POST /api/auth/signup",
+    "method": "POST",
+    "type": "performance",
+    "title": "Signup endpoint responds within 500ms",
+    "preconditions": "Backend running",
+    "steps": [
+      "Send POST /api/auth/signup with new valid user data",
+      "Record response time",
+      "Verify response time is <= 500ms"
+    ],
+    "test_data": {
+      "email": "perftest@example.com",
+      "name": "Perf Test",
+      "password": "SecurePass123"
+    },
+    "expected_result": "Response within 500ms",
+    "priority": "P0",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-064",
+    "app": "backend",
+    "suite": "api",
+    "module": "dashboard",
+    "endpoint_or_route": "GET /api/dashboard/stats",
+    "method": "GET",
+    "type": "performance",
+    "title": "Dashboard stats endpoint responds within 1000ms",
+    "preconditions": "Valid JWT token",
+    "steps": [
+      "Send GET /api/dashboard/stats with valid JWT",
+      "Record response time",
+      "Verify response time <= 1000ms"
+    ],
+    "test_data": {},
+    "expected_result": "Response within 1000ms with 200 OK",
+    "priority": "P1",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-065",
+    "app": "backend",
+    "suite": "api",
+    "module": "auth",
+    "endpoint_or_route": "POST /api/auth/signup",
+    "method": "POST",
+    "type": "api",
+    "title": "Signup response schema must not expose password hash",
+    "preconditions": "New email available",
+    "steps": [
+      "Send POST /api/auth/signup with valid data",
+      "Verify response contains access_token (string) and user (object)",
+      "Verify user object has: id, email, name, role",
+      "Verify response does NOT contain password, passwordHash, or refreshTokenHash"
+    ],
+    "test_data": {
+      "email": "schema@example.com",
+      "name": "Schema Test",
+      "password": "SecurePass123"
+    },
+    "expected_result": "Response matches { access_token: string, user: { id, email, name, role } } with no password field",
+    "priority": "P0",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-066",
+    "app": "backend",
+    "suite": "api",
+    "module": "auth",
+    "endpoint_or_route": "POST /api/auth/login",
+    "method": "POST",
+    "type": "api",
+    "title": "Login response schema and no sensitive data leakage",
+    "preconditions": "User exists",
+    "steps": [
+      "Send POST /api/auth/login with valid credentials",
+      "Verify response shape: { access_token, refresh_token, user: { id, email, name, role } }",
+      "Verify no password hash or refreshTokenHash in response",
+      "Verify Content-Type is application/json"
+    ],
+    "test_data": {
+      "email": "test@example.com",
+      "password": "ValidPass123"
+    },
+    "expected_result": "Response shape validated; no sensitive data leakage",
+    "priority": "P0",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-067",
+    "app": "backend",
+    "suite": "api",
+    "module": "chat",
+    "endpoint_or_route": "POST /api/chat/send",
+    "method": "POST",
+    "type": "api",
+    "title": "Chat send response schema contains all required fields",
+    "preconditions": "Backend running",
+    "steps": [
+      "Send POST /api/chat/send with valid data",
+      "Verify response contains: reply (string), modelId, sessionId, timestamp (ISO string), session (object)",
+      "Verify session contains: id, modelId, title, isGuest, messages array, createdAt, updatedAt"
+    ],
+    "test_data": {
+      "message": "Schema check message",
+      "modelId": "gpt-4o-mini"
+    },
+    "expected_result": "Full chat send schema validated with all required fields present",
+    "priority": "P0",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-068",
+    "app": "backend",
+    "suite": "api",
+    "module": "models",
+    "endpoint_or_route": "GET /api/models",
+    "method": "GET",
+    "type": "api",
+    "title": "Models list endpoint is public and requires no auth",
+    "preconditions": "None",
+    "steps": [
+      "Send GET /api/models without any Authorization header",
+      "Verify response status is 200",
+      "Verify response is accessible without authentication"
+    ],
+    "test_data": {},
+    "expected_result": "200 OK without requiring Authorization header",
+    "priority": "P1",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-069",
+    "app": "backend",
+    "suite": "api",
+    "module": "chat",
+    "endpoint_or_route": "POST /api/chat/send",
+    "method": "POST",
+    "type": "positive",
+    "title": "Guest user sends message without any session ID — session auto-created",
+    "preconditions": "Backend running; no prior session",
+    "steps": [
+      "Send POST /api/chat/send with no X-Session-Id header and no sessionId in body",
+      "Verify response status is 200",
+      "Verify a new sessionId is auto-created and returned",
+      "Verify session.isGuest = true in returned session"
+    ],
+    "test_data": {
+      "message": "Hello without session",
+      "modelId": "gpt-4o-mini"
+    },
+    "expected_result": "200 OK with auto-created guest sessionId; session.isGuest = true",
+    "priority": "P0",
+    "author_agent": "test-case-generator"
+  },
+  {
+    "id": "TC-070",
+    "app": "backend",
+    "suite": "api",
+    "module": "chat",
+    "endpoint_or_route": "POST /api/chat/send",
+    "method": "POST",
+    "type": "negative",
+    "title": "Authenticated user cannot hijack another user session via send",
+    "preconditions": "User A session exists; request made as user B",
+    "steps": [
+      "Send POST /api/chat/send with sessionId from user A while authenticated as user B",
+      "Verify a new session is created for user B",
+      "Verify response sessionId is different from user A's sessionId"
+    ],
+    "test_data": {
+      "message": "Cross session hijack attempt",
+      "modelId": "gpt-4o-mini",
+      "sessionId": "<user_A_session_id>"
+    },
+    "expected_result": "200 OK but with user B's new session; user A's session not reused",
+    "priority": "P0",
+    "author_agent": "test-case-generator"
+  }
+]

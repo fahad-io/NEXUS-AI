@@ -7,6 +7,13 @@ import cookieParser from 'cookie-parser';
 import { join } from 'path';
 
 async function bootstrap() {
+<<<<<<< HEAD
+=======
+  if (process.env.SIMULATE_DB_DOWN === 'true') {
+    throw new Error('Database unavailable');
+  }
+
+>>>>>>> rajanouman
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.enableCors({
     origin: process.env.FRONTEND_URL || 'http://localhost:3000',

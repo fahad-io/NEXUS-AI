@@ -1,3 +1,11 @@
+<<<<<<< HEAD
+=======
+---
+name: fix
+description: Resolve a verified issue with the smallest responsible edit — reproduce, fix, re-verify. No unrelated rewrites.
+---
+
+>>>>>>> rajanouman
 # Fix Command
 
 - Goal:
