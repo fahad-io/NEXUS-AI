@@ -1,3 +1,11 @@
+<<<<<<< HEAD
+=======
+---
+name: release
+description: Prepare the repo for safe handoff or deployment — full lint/test/build, verify all routes and buttons work, confirm light theme and no placeholder calls.
+---
+
+>>>>>>> rajanouman
 # Release Command
 
 - Goal:

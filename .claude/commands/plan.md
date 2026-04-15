@@ -1,3 +1,11 @@
+<<<<<<< HEAD
+=======
+---
+name: plan
+description: Inspect repo state and outline implementation work items before making any code changes.
+---
+
+>>>>>>> rajanouman
 # Plan Command
 
 - Goal:

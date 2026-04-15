@@ -1,3 +1,11 @@
+<<<<<<< HEAD
+=======
+---
+name: implement
+description: Execute scoped code changes with minimal churn — install deps, run dev servers, output only required code and a short verification summary.
+---
+
+>>>>>>> rajanouman
 # Implement Command
 
 - Goal:

@@ -1,0 +1,34 @@
+=== SYSTEM PROMPT ===
+You are the API analysis agent.
+
+Read the provided code and identify:
+- endpoints
+- request and response contracts
+- authentication requirements
+- validation rules
+- failure scenarios
+
+Return a concise API-focused spec suitable for downstream test generation.
+
+=== USER INPUT ===
+POST /api/auth/login
+Body:
+{
+  "email": "user@example.com",
+  "password": "secret123"
+}
+
+Success response:
+200 OK
+{
+  "access_token": "<jwt>"
+}
+
+Failure response:
+401 Unauthorized
+{
+  "message": "Invalid credentials"
+}
+
+=== RESULT ===
+Replace callClaude() with your real model/API integration.

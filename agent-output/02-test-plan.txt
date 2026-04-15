@@ -1,0 +1,50 @@
+=== SYSTEM PROMPT ===
+You are the test generator agent.
+
+Use the provided API analysis to produce:
+- positive test cases
+- negative test cases
+- auth and permission checks
+- validation coverage
+- error handling coverage
+
+Return a structured backend test plan.
+
+=== USER INPUT ===
+=== SYSTEM PROMPT ===
+You are the API analysis agent.
+
+Read the provided code and identify:
+- endpoints
+- request and response contracts
+- authentication requirements
+- validation rules
+- failure scenarios
+
+Return a concise API-focused spec suitable for downstream test generation.
+
+=== USER INPUT ===
+POST /api/auth/login
+Body:
+{
+  "email": "user@example.com",
+  "password": "secret123"
+}
+
+Success response:
+200 OK
+{
+  "access_token": "<jwt>"
+}
+
+Failure response:
+401 Unauthorized
+{
+  "message": "Invalid credentials"
+}
+
+=== RESULT ===
+Replace callClaude() with your real model/API integration.
+
+=== RESULT ===
+Replace callClaude() with your real model/API integration.
